@@ -1,10 +1,43 @@
-# KanbanLight: A Git-Paradigm Project Management Board with Time-Travel State, WASM Plugins, and a Developer CLI
+# KanbanLight: The Git-Paradigm Project Board
 
-> **KanbanLight** is an enterprise-grade, local-first project management platform engineered around the distributed version-control paradigm. It combines Git-style branching, visual state diffing, sandboxed WebAssembly (WASM) plugin persistence, local-first AI analytics, and a real-time WebSocket Developer CLI bridge (`kb`).
+![KanbanLight Interface](./docs/hero.png)
+
+> **Imagine if Trello worked like Git.** KanbanLight allows you to "branch" your project board, experiment with new tasks, and instantly see a visual diff of what changed before merging it back to main. It brings the power of distributed version control, time-travel state hydration, sandboxed WebAssembly plugins, and a real-time developer CLI to project management.
 
 ---
 
-## 🎯 Architecture Diagram
+## ✨ Core "Magic" Features
+
+### 🌿 Time-Travel State & Branching
+![Branching Demo](./docs/branching.gif)
+- **Non-Destructive Experimentation**: Spin up separate board branches (e.g. `experimental`, `sprint-2`) without affecting your primary board.
+- **IndexedDB Snapshots**: Complete board state serialization (`cards`, `columns`, `events`) saved to browser storage for instant time-travel switching and hydration.
+
+### 🔍 Visual Git Diffs
+![Visual Diff](./docs/diff.png)
+- **Comparative Branch Review**: Compare your current active branch against any target branch (e.g., `experimental vs main`).
+- **Tri-Color Indicator Rings**:
+  - **`+ Added`**: Green ring & tint for newly created cards.
+  - **`~ Modified`**: Amber ring & tint for edited or moved cards.
+  - **`- Deleted`**: Red dashed ring & opacity-60 ghosted cards rendered in their original columns.
+
+### 💻 Developer CLI (`kb`)
+![CLI Demo](./docs/cli.gif)
+- **Terminal UI Control**: Control the web application directly from your terminal using a lightweight local WebSocket bridge (`ws://localhost:8080`).
+- **Live UI Reactivity**: Run terminal commands and watch the web app instantly execute branch checkouts, diff visualizers, and task creations:
+  ```bash
+  kb branch feature-x -b
+  kb compare main
+  kb switch main
+  ```
+
+### 🧩 Browser-Native WebAssembly Plugins
+- **IndexedDB Binary Storage**: Persist compiled WebAssembly (`.wasm`) binaries directly in IndexedDB (`Uint8Array`/`ArrayBuffer`).
+- **Survives Refresh**: WASM plugins auto-recompile (`WebAssembly.compile`) on boot, guaranteeing persistent sandboxed extensions without backend servers.
+
+---
+
+## 🎯 System Architecture
 
 ```mermaid
 graph TD
@@ -12,19 +45,19 @@ graph TD
         UI[React UI / KanbanBoard]
         Store[Zustand Store - Single Source of Truth]
         DiffEngine[Visual Diff Engine]
-        PluginSvc[WASM Plugin Service]
+        PluginSvc[PluginService - WebAssembly Compiler]
         CliClient[CliSyncService - WebSocket Client]
     end
 
-    subgraph Browser Storage
+    subgraph Browser Storage Layer
         IDB[(DatabaseService - IndexedDB)]
         IDB_Cards[Cards & Events Store]
         IDB_Snapshots[Branch Snapshots Store]
         IDB_Plugins[WASM Binary Plugins Store]
     end
 
-    subgraph Local Development Environment
-        WsBridge[CLI WebSocket Bridge Server - ws://localhost:8080]
+    subgraph Local Environment
+        WsBridge[CLI Bridge Server - ws://localhost:8080]
         CliTool[kb Developer CLI - Commander.js]
     end
 
@@ -37,51 +70,26 @@ graph TD
     PluginSvc <--> IDB_Plugins
     CliClient <-->|ws://localhost:8080| WsBridge
     WsBridge <-->|JSON Payloads| CliTool
-    CliClient -->|State Hydration / Actions| Store
+    CliClient -->|State Actions| Store
 ```
 
 ---
 
-## ✨ Core Features
+## 🛠️ Tech Stack
 
-### 🌿 Git-Style Branching & Time-Travel Snapshots
-- **Branching Engine**: Create non-destructive feature branches (e.g., `experimental`, `sprint-2`) from any parent state.
-- **IndexedDB Snapshots**: Complete board state serialization (`cards`, `columns`, `events`) stored directly in IndexedDB.
-- **Instant Hydration**: Switch branches seamlessly with instant UI state replacement and IndexedDB synchronization.
-
-### 🔍 Visual Diffs & Ghost Card Rendering
-- **Comparative Diff Engine**: Compare your active branch against any target branch (e.g., `experimental vs main`).
-- **Tri-Color Indicator Rings**:
-  - **`+ Added`**: Green ring & background tint for cards added in current branch.
-  - **`~ Modified`**: Amber ring & background tint for modified/moved cards.
-  - **`- Deleted`**: Red dashed ring & opacity-60 ghost cards rendered in their original columns.
-- **Floating Banner**: Interactive diff mode banner displaying high-level change statistics with a one-click exit trigger.
-
-### 🧩 WebAssembly (WASM) Plugin Persistence
-- **Binary Module Storage**: Native IndexedDB binary storage (`Uint8Array`/`ArrayBuffer`) preserving WASM modules across page reloads.
-- **Hook Lifecycle**: Execute sandboxed binary plugins on card creation, moves, and board initialization.
-- **Zero LocalStorage Bottlenecks**: Re-compiles `WebAssembly.compile()` directly on app boot.
-
-### 💻 Developer CLI (`kb`) & Live Sync Bridge
-- **WebSocket Bridge**: Run `kb serve` to open a local synchronization bridge (`ws://localhost:8080`).
-- **Live Terminal Reactivity**: Run CLI commands in a second terminal tab and watch the browser UI instantly compute diffs and switch branches in real time:
-  ```bash
-  kb branch feature-x -b
-  kb compare main
-  kb switch main
-  ```
-- **CLI Badge Indicator**: Real-time "CLI Connected" header badge confirming WebSocket linkage.
-
-### 🤖 Local-First AI Analytics & Insights
-- **Workflow Analytics**: Detect bottlenecks, stagnant tasks, and velocity trends.
-- **Predictive Completion**: Automated estimation of board completion dates.
-- **Smart Card Creator**: AI-assisted card parsing with priority scoring and tag suggestions.
+- **Core**: React 18, Strict TypeScript, Vite
+- **State Management**: Zustand
+- **Styling**: Tailwind CSS, Lucide React
+- **Local Database**: IndexedDB (`idb` wrapper)
+- **Extensibility**: WebAssembly (WASM module compilation)
+- **Developer Tooling**: Node.js, Commander.js, WebSocket (`ws`)
+- **Real-Time Collaboration**: Yjs (CRDTs)
 
 ---
 
-## 🚀 Quickstart & Local Setup
+## 🚀 Local Setup & Quick Start
 
-### 1. Web Application Setup
+### Terminal 1: Web Frontend
 ```bash
 # Clone the repository
 git clone https://github.com/vardaanbazaz/kanbanlight.git
@@ -94,49 +102,29 @@ npm install
 npm run dev
 ```
 
-### 2. Developer CLI Setup & Live Sync
+### Terminal 2: Developer CLI Bridge (`kb`)
 ```bash
-# Open a new terminal window inside the repository
+# In a split terminal tab inside kanbanlight root:
 cd cli
 
 # Build the CLI TypeScript package
 npm run build
 
-# Start the CLI WebSocket Bridge Server
+# Boot up the CLI WebSocket Bridge Server
 npx tsx src/index.ts serve
-# (Output: 🚀 KanbanLight CLI Bridge Server listening on ws://localhost:8080)
 ```
 
-### 3. Testing Real-Time CLI Commands
-Open a second terminal window and run commands:
+### Terminal 3: Run CLI Commands
 ```bash
-# Create and checkout a new branch
+# Open a third terminal window to control the UI:
 npx tsx cli/src/index.ts branch experimental -b
-
-# Add a card from terminal
-npx tsx cli/src/index.ts add "Implement WebAssembly Worker Sandbox" -p high -c backlog
-
-# Compare current branch against main in Live UI
+npx tsx cli/src/index.ts add "Build WASM Sandbox" -p high -c backlog
 npx tsx cli/src/index.ts compare main
-
-# Switch back to main branch
 npx tsx cli/src/index.ts switch main
 ```
 
 ---
 
-## 🛠️ Production Build & Deployment
-
-### Build Command
-```bash
-npm run build
-```
-
-The output bundle is written to `dist/`, fully optimized for zero-config deployment to **Vercel**, **Netlify**, or **GitHub Pages**.
-
----
-
 ## 📄 License
-MIT License - See [LICENSE](LICENSE) for details.
 
-*Built by [Vardaan Bajaj](https://github.com/vardaanbazaz) - Showcasing advanced full-stack systems engineering, distributed state paradigms, and WebAssembly integration.*
+MIT License - Copyright (c) 2024. See [LICENSE](LICENSE) for details.

@@ -4,6 +4,7 @@ import { databaseService } from '../services/DatabaseService';
 import { CollaborationService } from '../services/CollaborationService';
 import { aiService } from '../services/AIService';
 import { branchingService } from '../services/BranchingService';
+import { pluginService } from '../services/PluginService';
 
 export type StoreApi<T> = {
   getState: () => T;
@@ -187,6 +188,15 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
         colService.updateCursor(e.clientX, e.clientY);
       };
       window.addEventListener('mousemove', handleMouseMove);
+
+      // Initialize Plugin Service from IndexedDB
+      await pluginService.initialize({
+        board: activeBoard,
+        user: currentUser,
+        emit: (event: string, data: any) => {
+          console.log(`Plugin event [${event}]:`, data);
+        }
+      }).catch((err) => console.error('Failed to initialize WASM plugins:', err));
 
       // Initialize AI Service
       aiService.initialize().catch(console.error);

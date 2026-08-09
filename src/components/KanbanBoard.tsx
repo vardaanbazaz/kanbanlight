@@ -8,7 +8,6 @@ import { SmartCardCreator } from './SmartCardCreator';
 import { PluginManager } from './PluginManager';
 import { BranchManager } from './BranchManager';
 import { useKanbanStore } from '../store/useKanbanStore';
-import { pluginService } from '../services/PluginService';
 
 export const KanbanBoard: React.FC = () => {
   const {
@@ -34,27 +33,6 @@ export const KanbanBoard: React.FC = () => {
 
   useEffect(() => {
     initializeStore();
-
-    // Initialize plugin service
-    const initializePlugins = async () => {
-      const mockBoard = {
-        id: 'default-board',
-        title: 'Main Board',
-        columns: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      };
-      
-      await pluginService.initialize({
-        board: mockBoard,
-        user: { id: 'current-user', name: 'You' },
-        emit: (event: string, data: any) => {
-          console.log(`Plugin event: ${event}`, data);
-        }
-      });
-    };
-    
-    initializePlugins();
   }, [initializeStore]);
 
   const handleCreateSmartCard = async (cardData: any) => {

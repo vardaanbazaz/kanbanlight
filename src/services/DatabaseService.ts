@@ -1,6 +1,19 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { Board, Card, Event, User } from '../types';
 
+export interface StoredPlugin {
+  id: string;
+  name: string;
+  version: string;
+  enabled: boolean;
+  wasmBytes?: ArrayBuffer | Uint8Array;
+  hooks: {
+    onCardCreate?: string;
+    onCardMove?: string;
+    onBoardLoad?: string;
+  };
+}
+
 interface KanbanDB extends DBSchema {
   boards: {
     key: string;
@@ -33,34 +46,53 @@ interface KanbanDB extends DBSchema {
     };
     indexes: { 'by-board': string };
   };
+  plugins: {
+    key: string;
+    value: StoredPlugin;
+  };
 }
 
 class DatabaseService {
   private db: IDBPDatabase<KanbanDB> | null = null;
 
   async initialize(): Promise<void> {
-    this.db = await openDB<KanbanDB>('kanban-light', 1, {
+    this.db = await openDB<KanbanDB>('kanban-light', 2, {
       upgrade(db) {
         // Boards store
-        const boardStore = db.createObjectStore('boards', { keyPath: 'id' });
-        boardStore.createIndex('by-updated', 'updatedAt');
+        if (!db.objectStoreNames.contains('boards')) {
+          const boardStore = db.createObjectStore('boards', { keyPath: 'id' });
+          boardStore.createIndex('by-updated', 'updatedAt');
+        }
 
         // Cards store
-        const cardStore = db.createObjectStore('cards', { keyPath: 'id' });
-        cardStore.createIndex('by-board', 'boardId');
-        cardStore.createIndex('by-column', 'columnId');
+        if (!db.objectStoreNames.contains('cards')) {
+          const cardStore = db.createObjectStore('cards', { keyPath: 'id' });
+          cardStore.createIndex('by-board', 'boardId');
+          cardStore.createIndex('by-column', 'columnId');
+        }
 
         // Events store (for event sourcing)
-        const eventStore = db.createObjectStore('events', { keyPath: 'id' });
-        eventStore.createIndex('by-board', 'boardId');
-        eventStore.createIndex('by-timestamp', 'timestamp');
+        if (!db.objectStoreNames.contains('events')) {
+          const eventStore = db.createObjectStore('events', { keyPath: 'id' });
+          eventStore.createIndex('by-board', 'boardId');
+          eventStore.createIndex('by-timestamp', 'timestamp');
+        }
 
         // Users store
-        db.createObjectStore('users', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('users')) {
+          db.createObjectStore('users', { keyPath: 'id' });
+        }
 
         // Snapshots store
-        const snapshotStore = db.createObjectStore('snapshots', { keyPath: 'id' });
-        snapshotStore.createIndex('by-board', 'boardId');
+        if (!db.objectStoreNames.contains('snapshots')) {
+          const snapshotStore = db.createObjectStore('snapshots', { keyPath: 'id' });
+          snapshotStore.createIndex('by-board', 'boardId');
+        }
+
+        // Plugins store
+        if (!db.objectStoreNames.contains('plugins')) {
+          db.createObjectStore('plugins', { keyPath: 'id' });
+        }
       },
     });
   }
@@ -221,16 +253,38 @@ class DatabaseService {
     return await this.db.getAll('users');
   }
 
+  // Plugin operations
+  async savePlugin(plugin: StoredPlugin): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    await this.db.put('plugins', plugin);
+  }
+
+  async getPlugin(id: string): Promise<StoredPlugin | undefined> {
+    if (!this.db) throw new Error('Database not initialized');
+    return await this.db.get('plugins', id);
+  }
+
+  async getAllPlugins(): Promise<StoredPlugin[]> {
+    if (!this.db) throw new Error('Database not initialized');
+    return await this.db.getAll('plugins');
+  }
+
+  async deletePlugin(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    await this.db.delete('plugins', id);
+  }
+
   // Utility methods
   async clearAll(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
-    const tx = this.db.transaction(['boards', 'cards', 'events', 'users', 'snapshots'], 'readwrite');
+    const tx = this.db.transaction(['boards', 'cards', 'events', 'users', 'snapshots', 'plugins'], 'readwrite');
     await Promise.all([
       tx.objectStore('boards').clear(),
       tx.objectStore('cards').clear(),
       tx.objectStore('events').clear(),
       tx.objectStore('users').clear(),
-      tx.objectStore('snapshots').clear()
+      tx.objectStore('snapshots').clear(),
+      tx.objectStore('plugins').clear()
     ]);
   }
 

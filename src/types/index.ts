@@ -62,6 +62,7 @@ export interface Plugin {
   version: string;
   enabled: boolean;
   wasmModule?: WebAssembly.Module;
+  wasmBytes?: ArrayBuffer | Uint8Array;
   hooks: {
     onCardCreate?: string;
     onCardMove?: string;

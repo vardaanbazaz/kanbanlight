@@ -1,4 +1,5 @@
-import { Plugin, Card, Board, Event } from '../types';
+import { Plugin, Card, Board } from '../types';
+import { databaseService } from './DatabaseService';
 
 interface PluginContext {
   board: Board;
@@ -29,15 +30,36 @@ class PluginService {
   }
 
   private async loadInstalledPlugins(): Promise<void> {
-    // Load plugins from localStorage or IndexedDB
-    const savedPlugins = localStorage.getItem('kanban-plugins');
-    if (savedPlugins) {
-      const plugins: Plugin[] = JSON.parse(savedPlugins);
-      for (const plugin of plugins) {
-        if (plugin.enabled) {
+    try {
+      const storedPlugins = await databaseService.getAllPlugins();
+      for (const stored of storedPlugins) {
+        let wasmModule: WebAssembly.Module | undefined;
+        if (stored.wasmBytes) {
+          try {
+            wasmModule = await WebAssembly.compile(stored.wasmBytes as BufferSource);
+          } catch (e) {
+            console.error(`Failed to compile WASM module for plugin ${stored.id}:`, e);
+          }
+        }
+
+        const plugin: Plugin = {
+          id: stored.id,
+          name: stored.name,
+          version: stored.version,
+          enabled: stored.enabled,
+          hooks: stored.hooks,
+          wasmBytes: stored.wasmBytes,
+          wasmModule
+        };
+
+        this.plugins.set(plugin.id, plugin);
+
+        if (plugin.enabled && wasmModule) {
           await this.loadPlugin(plugin);
         }
       }
+    } catch (error) {
+      console.error('Failed to load installed plugins from DatabaseService:', error);
     }
   }
 
@@ -45,19 +67,29 @@ class PluginService {
     try {
       // Compile WASM module
       const wasmModule = await WebAssembly.compile(wasmBytes);
-      
+
       const plugin: Plugin = {
         ...manifest,
+        wasmBytes,
         wasmModule
       };
 
       // Validate plugin
       await this.validatePlugin(plugin);
-      
-      // Store plugin
+
+      // Store plugin in memory map
       this.plugins.set(plugin.id, plugin);
-      await this.savePlugins();
-      
+
+      // Persist plugin metadata + binary bytes in IndexedDB
+      await databaseService.savePlugin({
+        id: plugin.id,
+        name: plugin.name,
+        version: plugin.version,
+        enabled: plugin.enabled,
+        hooks: plugin.hooks,
+        wasmBytes
+      });
+
       if (plugin.enabled) {
         await this.loadPlugin(plugin);
       }
@@ -71,15 +103,13 @@ class PluginService {
       throw new Error('Plugin must have a WASM module');
     }
 
-    // Basic security checks
     if (!plugin.id.match(/^[a-zA-Z0-9-_]+$/)) {
       throw new Error('Plugin ID contains invalid characters');
     }
 
-    // Check for required exports
     const moduleExports = WebAssembly.Module.exports(plugin.wasmModule);
     const requiredExports = ['init', 'execute'];
-    
+
     for (const required of requiredExports) {
       if (!moduleExports.find(exp => exp.name === required)) {
         throw new Error(`Plugin missing required export: ${required}`);
@@ -91,28 +121,24 @@ class PluginService {
     if (!plugin.wasmModule || !this.context) return;
 
     try {
-      // Create plugin API
       const api = this.createPluginAPI();
-      
-      // Create WASM imports
+
       const imports = {
         env: {
-          // Memory management
           memory: new WebAssembly.Memory({ initial: 1 }),
-          
-          // Plugin API bindings
+
           log: (ptr: number, len: number) => {
             const memory = new Uint8Array((imports.env.memory as WebAssembly.Memory).buffer);
             const message = new TextDecoder().decode(memory.slice(ptr, ptr + len));
             console.log(`[Plugin ${plugin.id}]:`, message);
           },
-          
+
           create_card: async (ptr: number, len: number) => {
             const memory = new Uint8Array((imports.env.memory as WebAssembly.Memory).buffer);
             const cardData = JSON.parse(new TextDecoder().decode(memory.slice(ptr, ptr + len)));
             return await api.createCard(cardData);
           },
-          
+
           show_notification: (ptr: number, len: number, type: number) => {
             const memory = new Uint8Array((imports.env.memory as WebAssembly.Memory).buffer);
             const message = new TextDecoder().decode(memory.slice(ptr, ptr + len));
@@ -122,32 +148,25 @@ class PluginService {
         }
       };
 
-      // Instantiate WASM module
       const instance = await WebAssembly.instantiate(plugin.wasmModule, imports);
       this.loadedModules.set(plugin.id, instance);
 
-      // Initialize plugin
       if (instance.exports.init) {
         (instance.exports.init as Function)();
       }
 
-      // Register hooks
       Object.entries(plugin.hooks).forEach(([hook, handler]) => {
         if (handler) {
           this.registerHook(hook, async (data: any) => {
             if (instance.exports.execute) {
               const encoder = new TextEncoder();
               const hookData = encoder.encode(JSON.stringify({ hook, data }));
-              
-              // Allocate memory in WASM
+
               const ptr = (instance.exports.malloc as Function)(hookData.length);
               const memory = new Uint8Array((imports.env.memory as WebAssembly.Memory).buffer);
               memory.set(hookData, ptr);
-              
-              // Execute plugin
+
               (instance.exports.execute as Function)(ptr, hookData.length);
-              
-              // Free memory
               (instance.exports.free as Function)(ptr);
             }
           });
@@ -179,7 +198,7 @@ class PluginService {
           updatedAt: Date.now(),
           conflicts: []
         };
-        
+
         this.context!.emit('card-created', newCard);
         return newCard;
       },
@@ -216,8 +235,22 @@ class PluginService {
     if (!plugin) throw new Error(`Plugin ${pluginId} not found`);
 
     plugin.enabled = true;
-    await this.savePlugins();
-    await this.loadPlugin(plugin);
+    await databaseService.savePlugin({
+      id: plugin.id,
+      name: plugin.name,
+      version: plugin.version,
+      enabled: true,
+      hooks: plugin.hooks,
+      wasmBytes: plugin.wasmBytes
+    });
+
+    if (!plugin.wasmModule && plugin.wasmBytes) {
+      plugin.wasmModule = await WebAssembly.compile(plugin.wasmBytes as BufferSource);
+    }
+
+    if (plugin.wasmModule) {
+      await this.loadPlugin(plugin);
+    }
   }
 
   async disablePlugin(pluginId: string): Promise<void> {
@@ -225,12 +258,16 @@ class PluginService {
     if (!plugin) throw new Error(`Plugin ${pluginId} not found`);
 
     plugin.enabled = false;
-    await this.savePlugins();
-    
-    // Unload plugin
+    await databaseService.savePlugin({
+      id: plugin.id,
+      name: plugin.name,
+      version: plugin.version,
+      enabled: false,
+      hooks: plugin.hooks,
+      wasmBytes: plugin.wasmBytes
+    });
+
     this.loadedModules.delete(pluginId);
-    
-    // Remove hooks
     this.hooks.forEach((handlers, hook) => {
       this.hooks.set(hook, handlers.filter(h => h.name !== pluginId));
     });
@@ -239,7 +276,7 @@ class PluginService {
   async uninstallPlugin(pluginId: string): Promise<void> {
     await this.disablePlugin(pluginId);
     this.plugins.delete(pluginId);
-    await this.savePlugins();
+    await databaseService.deletePlugin(pluginId);
   }
 
   getInstalledPlugins(): Plugin[] {
@@ -250,7 +287,6 @@ class PluginService {
     return this.commands;
   }
 
-  // Hook system
   registerHook(hook: string, handler: Function): void {
     if (!this.hooks.has(hook)) {
       this.hooks.set(hook, []);
@@ -263,36 +299,10 @@ class PluginService {
     const results = await Promise.allSettled(
       handlers.map(handler => handler(data))
     );
-    
+
     return results
       .filter(result => result.status === 'fulfilled')
       .map(result => (result as PromiseFulfilledResult<any>).value);
-  }
-
-  private async savePlugins(): Promise<void> {
-    const plugins = Array.from(this.plugins.values()).map(plugin => ({
-      ...plugin,
-      wasmModule: undefined // Don't serialize WASM module
-    }));
-    localStorage.setItem('kanban-plugins', JSON.stringify(plugins));
-  }
-
-  // Security sandbox
-  private createSandbox(): any {
-    return {
-      // Restricted global object
-      console: {
-        log: (...args: any[]) => console.log('[Plugin]', ...args),
-        warn: (...args: any[]) => console.warn('[Plugin]', ...args),
-        error: (...args: any[]) => console.error('[Plugin]', ...args)
-      },
-      
-      // No access to DOM, fetch, etc.
-      window: undefined,
-      document: undefined,
-      fetch: undefined,
-      XMLHttpRequest: undefined
-    };
   }
 }
 

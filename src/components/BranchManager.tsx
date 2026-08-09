@@ -217,6 +217,7 @@ export const BranchManager: React.FC = () => {
                 {/* Compare Button with Rich Hover Tooltip */}
                 <Tooltip content="Visually diff this branch against your current state." position="top">
                   <button
+                    data-tour="branch-compare-btn"
                     onClick={() => handleCompareBranch(branch.id)}
                     disabled={isSwitching}
                     className="flex items-center space-x-1 px-2.5 py-1 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 border border-indigo-200 dark:border-indigo-900 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/40 disabled:opacity-50 transition-colors"

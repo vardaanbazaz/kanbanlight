@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { GitBranch, Users, Zap, Terminal, Wifi, WifiOff, Database, Package, Sun, Moon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { GitBranch, Users, Zap, Terminal, Wifi, WifiOff, Database, Package, Sun, Moon, HelpCircle } from 'lucide-react';
 import { Column } from './Column';
 import { CollaborativeCursor } from './CollaborativeCursor';
 import { ConflictResolutionModal } from './ConflictResolutionModal';
@@ -8,6 +8,7 @@ import { SmartCardCreator } from './SmartCardCreator';
 import { PluginManager } from './PluginManager';
 import { BranchManager } from './BranchManager';
 import { Tooltip } from './Tooltip';
+import { GuidedTour } from './GuidedTour';
 import { useKanbanStore } from '../store/useKanbanStore';
 import { useTheme } from '../providers/ThemeProvider';
 
@@ -40,6 +41,10 @@ export const KanbanBoard: React.FC = () => {
 
   const { resolvedTheme, toggleTheme } = useTheme();
 
+  const [isTourOpen, setIsTourOpen] = useState(() => {
+    return localStorage.getItem('kanbanlight-tour-completed') !== 'true';
+  });
+
   useEffect(() => {
     initializeStore();
   }, [initializeStore]);
@@ -58,18 +63,18 @@ export const KanbanBoard: React.FC = () => {
               <GitBranch className="w-6 h-6 text-slate-700 dark:text-zinc-300" />
               <h1 className="text-xl font-semibold text-slate-900 dark:text-zinc-100">KanbanLight</h1>
               
-              {/* Branch Badge with Tooltip */}
+              {/* Branch Badge with Tooltip & Tour target */}
               <Tooltip content="Your current isolated workspace. Switch branches to time-travel." position="bottom">
-                <span className="text-xs bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 px-2.5 py-1 rounded-full font-mono cursor-help transition-colors">
+                <span data-tour="branch-badge" className="text-xs bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 px-2.5 py-1 rounded-full font-mono cursor-help transition-colors">
                   {activeBranchId}@{events.length}
                 </span>
               </Tooltip>
             </div>
 
-            {/* CLI Connected Badge with Tooltip */}
+            {/* CLI Connected Badge with Tooltip & Tour target */}
             {isCliConnected && (
               <Tooltip content="Live WebSocket bridge active. Open your terminal and type 'kb help'." position="bottom">
-                <div className="flex items-center space-x-1.5 text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 px-2.5 py-1 rounded-full font-mono font-medium cursor-help transition-colors">
+                <div data-tour="cli-badge" className="flex items-center space-x-1.5 text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 px-2.5 py-1 rounded-full font-mono font-medium cursor-help transition-colors">
                   <Terminal className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
                   <span>CLI Connected</span>
                 </div>
@@ -113,6 +118,17 @@ export const KanbanBoard: React.FC = () => {
               </div>
             </div>
 
+            {/* Help / Guided Tour Button */}
+            <Tooltip content="Product Tour & Help" position="bottom">
+              <button
+                onClick={() => setIsTourOpen(true)}
+                className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-purple-600 dark:text-purple-400 rounded-lg transition-colors"
+                aria-label="Start Guided Product Tour"
+              >
+                <HelpCircle className="w-4 h-4" />
+              </button>
+            </Tooltip>
+
             {/* Theme Toggle Button */}
             <Tooltip content={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`} position="bottom">
               <button
@@ -128,9 +144,10 @@ export const KanbanBoard: React.FC = () => {
               </button>
             </Tooltip>
 
-            {/* Command Palette Trigger */}
+            {/* Command Palette Trigger & Tour Target */}
             <Tooltip content="Quick command palette (⌘K)" position="bottom">
               <button
+                data-tour="command-palette-btn"
                 onClick={() => setCommandPaletteOpen(true)}
                 className="flex items-center space-x-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg text-sm text-slate-600 dark:text-zinc-300 transition-colors border border-transparent dark:border-zinc-700/50"
               >
@@ -160,6 +177,7 @@ export const KanbanBoard: React.FC = () => {
               
               <Tooltip content="Branch Manager" position="bottom">
                 <button
+                  data-tour="branch-manager-btn"
                   onClick={() => setShowBranchManager(true)}
                   className="p-2 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-slate-500 dark:text-zinc-400"
                 >
@@ -323,6 +341,12 @@ export const KanbanBoard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Guided Product Tour */}
+      <GuidedTour
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+      />
     </div>
   );
 };

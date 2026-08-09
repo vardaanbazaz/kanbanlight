@@ -1,9 +1,9 @@
-import { WebSocketServer, WebSocket } from 'ws';
+import WebSocket from 'ws';
 import chalk from 'chalk';
 
 export class CliBridgeServer {
-  private wss: WebSocketServer | null = null;
-  private clients: Set<WebSocket> = new Set();
+  private wss: any = null;
+  private clients: Set<any> = new Set();
   private port: number;
 
   constructor(port: number = 8080) {
@@ -12,26 +12,27 @@ export class CliBridgeServer {
 
   public start(): void {
     try {
-      this.wss = new WebSocketServer({ port: this.port });
+      const ServerClass = (WebSocket as any).Server || (WebSocket as any).WebSocketServer || WebSocket;
+      this.wss = new ServerClass({ port: this.port });
 
       console.log(chalk.bold.green(`\n🚀 KanbanLight CLI Bridge Server listening on ws://localhost:${this.port}`));
       console.log(chalk.gray('Ready to synchronize CLI commands with live React UI...\n'));
 
-      this.wss.on('connection', (ws: WebSocket) => {
+      this.wss.on('connection', (ws: any) => {
         this.clients.add(ws);
         console.log(chalk.cyan(`[Bridge] Client connected (${this.clients.size} active connections)`));
 
         // Send welcome handshake
         ws.send(JSON.stringify({ type: 'HANDSHAKE_ACK', payload: { connectedClients: this.clients.size } }));
 
-        ws.on('message', (message: string | Buffer) => {
+        ws.on('message', (message: any) => {
           try {
             const data = JSON.parse(message.toString());
             console.log(chalk.yellow(`[Bridge Command] ${data.type}`), data.payload || '');
 
             // Broadcast message to all connected clients
             for (const client of this.clients) {
-              if (client.readyState === WebSocket.OPEN) {
+              if (client.readyState === 1 || client.readyState === (WebSocket as any).OPEN) {
                 client.send(JSON.stringify(data));
               }
             }
@@ -45,7 +46,7 @@ export class CliBridgeServer {
           console.log(chalk.gray(`[Bridge] Client disconnected (${this.clients.size} active connections)`));
         });
 
-        ws.on('error', (err: Error) => {
+        ws.on('error', (err: any) => {
           console.error(chalk.red('[Bridge Socket Error]:'), err.message);
         });
       });
@@ -62,7 +63,7 @@ export class CliBridgeServer {
     console.log(chalk.yellow('\nShutting down CLI Bridge Server...'));
     if (this.wss) {
       for (const client of this.clients) {
-        client.close();
+        if (typeof client.close === 'function') client.close();
       }
       this.wss.close(() => {
         console.log(chalk.green('CLI Bridge Server stopped successfully.'));

@@ -110,11 +110,11 @@ export const CommandPalette: React.FC = () => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-32 z-50">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-start justify-center pt-32 z-50">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg shadow-2xl w-full max-w-2xl mx-4 overflow-hidden transition-colors">
         {/* Search Input */}
-        <div className="flex items-center px-4 py-3 border-b border-slate-200">
-          <Search className="w-5 h-5 text-slate-400 mr-3" />
+        <div className="flex items-center px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
+          <Search className="w-5 h-5 text-slate-400 dark:text-zinc-500 mr-3" />
           <input
             type="text"
             value={query}
@@ -123,21 +123,21 @@ export const CommandPalette: React.FC = () => {
               setSelectedIndex(0);
             }}
             placeholder="Type a command or search..."
-            className="flex-1 outline-none text-slate-800 placeholder-slate-400"
+            className="flex-1 bg-transparent outline-none text-slate-800 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 text-sm"
             autoFocus
           />
           <button
             onClick={() => setIsOpen(false)}
-            className="text-xs text-slate-400 hover:text-slate-600 ml-3"
+            className="text-xs text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 ml-3"
           >
             ESC to close
           </button>
         </div>
 
         {/* Commands List */}
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-zinc-800/40">
           {filteredCommands.length === 0 ? (
-            <div className="px-4 py-8 text-center text-slate-500">
+            <div className="px-4 py-8 text-center text-slate-500 dark:text-zinc-400 text-sm">
               No commands found
             </div>
           ) : (
@@ -146,30 +146,30 @@ export const CommandPalette: React.FC = () => {
                 key={command.id}
                 className={`flex items-center px-4 py-3 cursor-pointer transition-colors ${
                   index === selectedIndex
-                    ? 'bg-blue-50 border-r-2 border-blue-500'
-                    : 'hover:bg-slate-50'
+                    ? 'bg-blue-50 dark:bg-blue-950/50 border-r-2 border-blue-500 dark:border-blue-400'
+                    : 'hover:bg-slate-50 dark:hover:bg-zinc-800/60'
                 }`}
                 onClick={() => executeCommand(command)}
               >
                 <div className="flex items-center space-x-3 flex-1">
-                  <div className="text-slate-600">
+                  <div className="text-slate-600 dark:text-zinc-400">
                     {command.icon}
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-slate-800">
+                    <div className="text-sm font-medium text-slate-800 dark:text-zinc-100">
                       {command.title}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-slate-500 dark:text-zinc-400">
                       {command.description}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                  <span className="text-xs bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 px-2 py-1 rounded border border-slate-200/50 dark:border-zinc-700/50">
                     {command.category}
                   </span>
                   {command.shortcut && (
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-400 dark:text-zinc-500 font-mono">
                       {command.shortcut}
                     </span>
                   )}
@@ -180,7 +180,7 @@ export const CommandPalette: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex justify-between">
+        <div className="px-4 py-2 bg-slate-50 dark:bg-zinc-950/60 border-t border-slate-200 dark:border-zinc-800 text-xs text-slate-500 dark:text-zinc-400 flex justify-between">
           <span>↑↓ to navigate</span>
           <span>↵ to select</span>
         </div>

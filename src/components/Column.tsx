@@ -41,11 +41,11 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
     : [];
 
   const colorClasses = {
-    slate: 'bg-slate-100 border-slate-200',
-    blue: 'bg-blue-50 border-blue-200',
-    amber: 'bg-amber-50 border-amber-200',
-    purple: 'bg-purple-50 border-purple-200',
-    emerald: 'bg-emerald-50 border-emerald-200'
+    slate: 'bg-slate-100 dark:bg-zinc-800/90 border-slate-200 dark:border-zinc-700/80',
+    blue: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/60',
+    amber: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60',
+    purple: 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-900/60',
+    emerald: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60'
   };
 
   const handleAddCard = async () => {
@@ -59,27 +59,27 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
   return (
     <div className="flex flex-col w-80 h-full">
       {/* Column Header */}
-      <div className={`rounded-t-lg border-2 ${colorClasses[color as keyof typeof colorClasses]} p-4`}>
+      <div className={`rounded-t-lg border-2 ${colorClasses[color as keyof typeof colorClasses]} p-4 transition-colors`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2">
-            <h3 className="font-semibold text-slate-800">{title}</h3>
-            <span className="text-xs bg-white bg-opacity-60 text-slate-600 px-2 py-1 rounded-full">
+            <h3 className="font-semibold text-slate-800 dark:text-zinc-100">{title}</h3>
+            <span className="text-xs bg-white/70 dark:bg-zinc-900/70 text-slate-600 dark:text-zinc-300 px-2 py-1 rounded-full border border-slate-200/50 dark:border-zinc-700/50">
               {cards.length + deletedCardsInColumn.length}
             </span>
           </div>
           <div className="flex items-center space-x-1">
-            <button className="p-1 hover:bg-white hover:bg-opacity-50 rounded">
-              <GitCommit className="w-4 h-4 text-slate-500" />
+            <button className="p-1 hover:bg-white/50 dark:hover:bg-zinc-800/50 rounded text-slate-500 dark:text-zinc-400">
+              <GitCommit className="w-4 h-4" />
             </button>
-            <button className="p-1 hover:bg-white hover:bg-opacity-50 rounded">
-              <MoreHorizontal className="w-4 h-4 text-slate-500" />
+            <button className="p-1 hover:bg-white/50 dark:hover:bg-zinc-800/50 rounded text-slate-500 dark:text-zinc-400">
+              <MoreHorizontal className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Cards Container */}
-      <div className="flex-1 bg-white border-l-2 border-r-2 border-slate-200 p-4 space-y-3 overflow-y-auto">
+      <div className="flex-1 bg-white dark:bg-zinc-900/90 border-l-2 border-r-2 border-slate-200 dark:border-zinc-800 p-4 space-y-3 overflow-y-auto transition-colors">
         {cards.map((card: any) => {
           let diffStatus: 'added' | 'modified' | 'deleted' | undefined;
           if (isDiffModeActive) {
@@ -96,13 +96,13 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
 
         {/* Add Card */}
         {isAddingCard ? (
-          <div className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-3">
+          <div className="bg-white dark:bg-zinc-800 border-2 border-dashed border-slate-300 dark:border-zinc-700 rounded-lg p-3">
             <input
               type="text"
               value={newCardTitle}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewCardTitle(e.target.value)}
               placeholder="Enter card title..."
-              className="w-full text-sm border-none outline-none resize-none"
+              className="w-full text-sm bg-transparent border-none outline-none text-slate-800 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 resize-none"
               onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                 if (e.key === 'Enter') handleAddCard();
                 if (e.key === 'Escape') setIsAddingCard(false);
@@ -112,13 +112,13 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
             <div className="flex justify-end space-x-2 mt-2">
               <button
                 onClick={() => setIsAddingCard(false)}
-                className="px-2 py-1 text-xs text-slate-500 hover:text-slate-700"
+                className="px-2 py-1 text-xs text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddCard}
-                className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-3 py-1 text-xs bg-blue-500 dark:bg-blue-600 text-white rounded hover:bg-blue-600 dark:hover:bg-blue-500"
               >
                 Add
               </button>
@@ -127,7 +127,7 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
         ) : (
           <button
             onClick={() => setIsAddingCard(true)}
-            className="w-full p-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-500 hover:border-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center space-x-2"
+            className="w-full p-3 border-2 border-dashed border-slate-300 dark:border-zinc-800 rounded-lg text-slate-500 dark:text-zinc-400 hover:border-slate-400 dark:hover:border-zinc-700 hover:text-slate-600 dark:hover:text-zinc-200 transition-colors flex items-center justify-center space-x-2"
           >
             <Plus className="w-4 h-4" />
             <span className="text-sm">Add card</span>
@@ -136,8 +136,8 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
       </div>
 
       {/* Column Footer */}
-      <div className={`rounded-b-lg border-2 border-t-0 ${colorClasses[color as keyof typeof colorClasses]} p-2`}>
-        <div className="text-xs text-slate-500 text-center">
+      <div className={`rounded-b-lg border-2 border-t-0 ${colorClasses[color as keyof typeof colorClasses]} p-2 transition-colors`}>
+        <div className="text-xs text-slate-500 dark:text-zinc-400 text-center">
           Last sync: just now
         </div>
       </div>

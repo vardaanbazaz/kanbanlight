@@ -79,11 +79,11 @@ export const PluginManager: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
+    <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-6 max-w-4xl mx-auto transition-colors">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <Package className="w-6 h-6 text-blue-600" />
-          <h2 className="text-xl font-semibold text-slate-800">Plugin Manager</h2>
+          <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          <h2 className="text-xl font-semibold text-slate-800 dark:text-zinc-100">Plugin Manager</h2>
         </div>
         
         <div className="flex items-center space-x-3">
@@ -96,7 +96,7 @@ export const PluginManager: React.FC = () => {
           />
           <label
             htmlFor="plugin-file"
-            className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 cursor-pointer transition-colors"
+            className="flex items-center space-x-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-lg cursor-pointer transition-colors"
           >
             <Upload className="w-4 h-4" />
             <span>Select WASM Plugin</span>
@@ -106,7 +106,7 @@ export const PluginManager: React.FC = () => {
             <button
               onClick={installPlugin}
               disabled={isInstalling}
-              className="flex items-center space-x-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 text-white rounded-lg disabled:opacity-50 transition-colors"
             >
               <Download className="w-4 h-4" />
               <span>{isInstalling ? 'Installing...' : 'Install'}</span>
@@ -116,8 +116,8 @@ export const PluginManager: React.FC = () => {
       </div>
 
       {selectedFile && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-lg">
+          <p className="text-sm text-blue-800 dark:text-blue-300">
             Selected: <strong>{selectedFile.name}</strong> ({(selectedFile.size / 1024).toFixed(1)} KB)
           </p>
         </div>
@@ -125,38 +125,38 @@ export const PluginManager: React.FC = () => {
 
       <div className="space-y-4">
         {plugins.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
-            <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">No plugins installed</p>
+          <div className="text-center py-12 text-slate-500 dark:text-zinc-400">
+            <Package className="w-12 h-12 mx-auto mb-4 opacity-50 text-slate-400 dark:text-zinc-600" />
+            <p className="text-lg font-medium mb-2 text-slate-700 dark:text-zinc-200">No plugins installed</p>
             <p className="text-sm">Upload a WASM plugin to get started</p>
           </div>
         ) : (
           plugins.map((plugin) => (
             <div
               key={plugin.id}
-              className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              className="border border-slate-200 dark:border-zinc-800 rounded-lg p-4 hover:shadow-md dark:hover:border-zinc-700 transition-all bg-white dark:bg-zinc-900"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-medium text-slate-800">
+                    <h3 className="text-lg font-medium text-slate-800 dark:text-zinc-100">
                       {plugin.name}
                     </h3>
-                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                    <span className="text-xs bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 px-2 py-1 rounded-full border border-slate-200/50 dark:border-zinc-700/50">
                       v{plugin.version}
                     </span>
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
+                      className={`text-xs px-2 py-1 rounded-full border ${
                         plugin.enabled
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-slate-100 text-slate-600'
+                          ? 'bg-green-100 dark:bg-emerald-950/60 text-green-700 dark:text-emerald-300 border-green-200 dark:border-emerald-800'
+                          : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-700'
                       }`}
                     >
                       {plugin.enabled ? 'Enabled' : 'Disabled'}
                     </span>
                   </div>
                   
-                  <div className="text-sm text-slate-600 mb-3">
+                  <div className="text-sm text-slate-600 dark:text-zinc-400 mb-3">
                     <p><strong>ID:</strong> {plugin.id}</p>
                     <p><strong>Hooks:</strong> {Object.keys(plugin.hooks).join(', ')}</p>
                   </div>
@@ -167,8 +167,8 @@ export const PluginManager: React.FC = () => {
                     onClick={() => togglePlugin(plugin.id, !plugin.enabled)}
                     className={`p-2 rounded-lg transition-colors ${
                       plugin.enabled
-                        ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
-                        : 'bg-green-100 text-green-600 hover:bg-green-200'
+                        ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60'
+                        : 'bg-green-100 dark:bg-emerald-950/60 text-green-600 dark:text-emerald-400 hover:bg-green-200 dark:hover:bg-emerald-900/60'
                     }`}
                     title={plugin.enabled ? 'Disable plugin' : 'Enable plugin'}
                   >
@@ -176,7 +176,7 @@ export const PluginManager: React.FC = () => {
                   </button>
                   
                   <button
-                    className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+                    className="p-2 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-lg hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
                     title="Plugin settings"
                   >
                     <Settings className="w-4 h-4" />
@@ -184,7 +184,7 @@ export const PluginManager: React.FC = () => {
                   
                   <button
                     onClick={() => uninstallPlugin(plugin.id)}
-                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                    className="p-2 bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
                     title="Uninstall plugin"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -196,13 +196,13 @@ export const PluginManager: React.FC = () => {
         )}
       </div>
 
-      <div className="mt-8 p-4 bg-slate-50 rounded-lg">
-        <h3 className="text-sm font-medium text-slate-800 mb-2">Plugin Development</h3>
-        <p className="text-xs text-slate-600 mb-3">
+      <div className="mt-8 p-4 bg-slate-50 dark:bg-zinc-950/60 border border-slate-200/50 dark:border-zinc-800 rounded-lg">
+        <h3 className="text-sm font-medium text-slate-800 dark:text-zinc-200 mb-2">Plugin Development</h3>
+        <p className="text-xs text-slate-600 dark:text-zinc-400 mb-3">
           Plugins are WebAssembly modules that extend KanbanLight functionality. They run in a secure sandbox
           with controlled access to the board API.
         </p>
-        <div className="text-xs text-slate-500 space-y-1">
+        <div className="text-xs text-slate-500 dark:text-zinc-400 space-y-1">
           <p><strong>Required exports:</strong> init(), execute(), malloc(), free()</p>
           <p><strong>Available hooks:</strong> onCardCreate, onCardMove, onBoardLoad</p>
           <p><strong>API access:</strong> createCard, updateCard, deleteCard, showNotification</p>

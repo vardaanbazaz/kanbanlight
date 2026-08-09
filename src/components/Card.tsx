@@ -19,9 +19,9 @@ export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const priorityColors = {
-    low: 'bg-green-100 text-green-700 border-green-200',
-    medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    high: 'bg-red-100 text-red-700 border-red-200'
+    low: 'bg-green-100 dark:bg-emerald-950/60 text-green-700 dark:text-emerald-300 border-green-200 dark:border-emerald-800',
+    medium: 'bg-yellow-100 dark:bg-amber-950/60 text-yellow-700 dark:text-amber-300 border-yellow-200 dark:border-amber-800',
+    high: 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800'
   };
 
   const priorityIcons = {
@@ -33,13 +33,13 @@ export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
   const getDiffClasses = () => {
     switch (diffStatus) {
       case 'added':
-        return 'ring-2 ring-emerald-500 bg-emerald-50/70 border-emerald-300';
+        return 'ring-2 ring-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800';
       case 'modified':
-        return 'ring-2 ring-amber-500 bg-amber-50/70 border-amber-300';
+        return 'ring-2 ring-amber-500 bg-amber-50/70 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800';
       case 'deleted':
-        return 'ring-2 ring-red-400 bg-red-50/60 opacity-60 pointer-events-none border-dashed border-red-300';
+        return 'ring-2 ring-red-400 bg-red-50/60 dark:bg-red-950/30 opacity-60 pointer-events-none border-dashed border-red-300 dark:border-red-800';
       default:
-        return 'bg-white border-slate-200 hover:shadow-md';
+        return 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 hover:shadow-md dark:hover:border-zinc-700';
     }
   };
 
@@ -50,24 +50,24 @@ export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
     >
       {/* Card Header & Diff Badge */}
       <div className="flex items-start justify-between mb-2">
-        <h4 className="text-sm font-medium text-slate-800 flex-1 pr-2">
+        <h4 className="text-sm font-medium text-slate-800 dark:text-zinc-100 flex-1 pr-2">
           {card.title}
         </h4>
         <div className="flex items-center space-x-1">
           {diffStatus === 'added' && (
-            <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+            <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
               <PlusCircle className="w-3 h-3" />
               <span>+ Added</span>
             </span>
           )}
           {diffStatus === 'modified' && (
-            <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+            <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
               <RefreshCw className="w-3 h-3" />
               <span>~ Modified</span>
             </span>
           )}
           {diffStatus === 'deleted' && (
-            <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-800 border border-red-300">
+            <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 dark:bg-red-900/60 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700">
               <Trash2 className="w-3 h-3" />
               <span>- Deleted</span>
             </span>
@@ -80,7 +80,7 @@ export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
 
       {/* Card Description */}
       {isExpanded && (
-        <p className="text-xs text-slate-600 mb-3 leading-relaxed">
+        <p className="text-xs text-slate-600 dark:text-zinc-300 mb-3 leading-relaxed">
           {card.description}
         </p>
       )}
@@ -93,7 +93,7 @@ export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
         </div>
         
         {card.conflicts && card.conflicts.length > 0 && (
-          <div className="flex items-center space-x-1 text-xs text-amber-600">
+          <div className="flex items-center space-x-1 text-xs text-amber-600 dark:text-amber-400">
             <AlertTriangle className="w-3 h-3" />
             <span>{card.conflicts.length} conflicts</span>
           </div>
@@ -106,7 +106,7 @@ export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
           {card.tags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center space-x-1 px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs"
+              className="inline-flex items-center space-x-1 px-2 py-0.5 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-transparent dark:border-zinc-700/60 rounded text-xs"
             >
               <Tag className="w-3 h-3" />
               <span>{tag}</span>
@@ -116,7 +116,7 @@ export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
       )}
 
       {/* Card Footer */}
-      <div className="flex items-center justify-between text-xs text-slate-500">
+      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
         <div className="flex items-center space-x-1">
           <User className="w-3 h-3" />
           <span>{card.assignee}</span>
@@ -129,14 +129,14 @@ export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
 
       {/* Expanded Actions */}
       {isExpanded && diffStatus !== 'deleted' && (
-        <div className="mt-3 pt-3 border-t border-slate-100 flex justify-end space-x-2">
-          <button className="px-2 py-1 text-xs text-slate-500 hover:text-slate-700 border border-slate-200 rounded">
+        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-zinc-800 flex justify-end space-x-2">
+          <button className="px-2 py-1 text-xs text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 border border-slate-200 dark:border-zinc-700 rounded">
             Edit
           </button>
-          <button className="px-2 py-1 text-xs text-blue-600 hover:text-blue-700 border border-blue-200 rounded hover:bg-blue-50">
+          <button className="px-2 py-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded">
             History
           </button>
-          <button className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600">
+          <button className="px-2 py-1 text-xs bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 text-white rounded">
             Commit
           </button>
         </div>

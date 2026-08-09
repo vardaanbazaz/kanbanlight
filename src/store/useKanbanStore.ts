@@ -5,6 +5,7 @@ import { CollaborationService } from '../services/CollaborationService';
 import { aiService } from '../services/AIService';
 import { branchingService } from '../services/BranchingService';
 import { pluginService } from '../services/PluginService';
+import { cliSyncService } from '../services/CliSyncService';
 
 export type StoreApi<T> = {
   getState: () => T;
@@ -67,6 +68,9 @@ export interface KanbanState {
   isDiffModeActive: boolean;
   diffTargetBranchId: string | null;
   branchDiff: BranchDiff | null;
+
+  // CLI Bridge State
+  isCliConnected: boolean;
 
   // Collaboration & Presence State
   users: User[];
@@ -136,6 +140,7 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
   isDiffModeActive: false,
   diffTargetBranchId: null,
   branchDiff: null,
+  isCliConnected: false,
   users: [],
   currentUser: null,
   conflicts: [],
@@ -212,6 +217,9 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
 
       // Initialize AI Service
       aiService.initialize().catch(console.error);
+
+      // Connect to CLI Sync Bridge Server
+      cliSyncService.connect();
 
       const activeBranchId = branchingService.getCurrentBranch()?.id || 'main';
 

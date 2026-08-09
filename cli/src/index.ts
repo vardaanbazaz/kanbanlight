@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import { BoardService } from './services/BoardService';
 import { GitIntegration } from './services/GitIntegration';
 import { SyncService } from './services/SyncService';
+import { startCliServer } from './server';
 import { 
   createBoard, 
   listBoards, 
@@ -15,6 +16,8 @@ import {
   showStatus,
   showHistory,
   createBranch,
+  compareBranch,
+  exitDiff,
   mergeBranch,
   syncBoard
 } from './commands';
@@ -26,7 +29,18 @@ program
   .description('KanbanLight CLI - Git-paradigm project management')
   .version('1.0.0');
 
-// Board management commands
+// Local Bridge Server command
+program
+  .command('serve')
+  .alias('start')
+  .description('Start local WebSocket bridge server to sync with live React UI')
+  .option('-p, --port <port>', 'Server port', '8080')
+  .action((options) => {
+    const port = parseInt(options.port || '8080');
+    startCliServer(port);
+  });
+
+// Board & Branch management commands
 program
   .command('init')
   .description('Initialize a new Kanban board in current directory')
@@ -40,8 +54,14 @@ program
   .action(listBoards);
 
 program
-  .command('checkout <board>')
-  .description('Switch to a different board')
+  .command('checkout <target>')
+  .alias('switch')
+  .description('Switch active branch or board')
+  .action(switchBoard);
+
+program
+  .command('switch <target>')
+  .description('Switch active branch or board')
   .action(switchBoard);
 
 // Card management commands
@@ -86,6 +106,17 @@ program
   .description('Create a new board branch')
   .option('-b, --checkout', 'Checkout branch after creation')
   .action(createBranch);
+
+program
+  .command('compare <branch>')
+  .alias('diff')
+  .description('Compare active branch against target branch in Live UI')
+  .action(compareBranch);
+
+program
+  .command('exit-diff')
+  .description('Exit Visual Diff mode in Live UI')
+  .action(exitDiff);
 
 program
   .command('merge <branch>')
@@ -136,7 +167,6 @@ program
   .option('--predictions', 'Generate completion predictions')
   .action((options) => {
     console.log(chalk.magenta('🧠 AI Analysis:'), options);
-    // AI analysis implementation would go here
   });
 
 // Error handling
@@ -146,4 +176,4 @@ program.on('command:*', () => {
 });
 
 // Parse command line arguments
-program.parse();
+program.parse(process.argv);

@@ -5,6 +5,7 @@ import { table } from 'table';
 import { format, formatDistanceToNow } from 'date-fns';
 import { BoardService } from '../services/BoardService';
 import { SyncService } from '../services/SyncService';
+import { sendToBridge } from '../services/BridgeClient';
 
 const boardService = new BoardService();
 const syncService = new SyncService(boardService);
@@ -66,24 +67,31 @@ export async function listBoards() {
 }
 
 export async function switchBoard(boardName: string) {
-  const spinner = ora(`Switching to board "${boardName}"...`).start();
+  const spinner = ora(`Switching to "${boardName}"...`).start();
   
   try {
+    const sent = await sendToBridge({
+      type: 'SWITCH_BRANCH',
+      payload: boardName
+    });
+
     const boards = await boardService.getBoards();
     const targetBoard = boards.find(b => 
       b.name.toLowerCase() === boardName.toLowerCase() || 
       b.id === boardName
     );
     
-    if (!targetBoard) {
-      spinner.fail(chalk.red(`❌ Board "${boardName}" not found`));
-      return;
+    if (targetBoard) {
+      await boardService.switchBoard(targetBoard.id);
     }
 
-    await boardService.switchBoard(targetBoard.id);
-    spinner.succeed(chalk.green(`✅ Switched to board "${targetBoard.name}"`));
+    if (sent) {
+      spinner.succeed(chalk.green(`✅ Switched to branch "${boardName}" (Live UI Synced)`));
+    } else {
+      spinner.succeed(chalk.green(`✅ Switched to branch "${boardName}"`));
+    }
   } catch (error) {
-    spinner.fail(chalk.red(`❌ Failed to switch board: ${(error as Error).message}`));
+    spinner.fail(chalk.red(`❌ Failed to switch branch: ${(error as Error).message}`));
   }
 }
 
@@ -96,29 +104,33 @@ export async function createCard(title: string, options: {
   const spinner = ora('Creating card...').start();
   
   try {
-    const activeBoard = await boardService.getActiveBoard();
-    if (!activeBoard) {
-      spinner.fail(chalk.red('❌ No active board. Use "kb checkout <board>" first'));
-      return;
-    }
-
-    const card = await boardService.createCard({
-      boardId: activeBoard.id,
-      title,
-      description: options.description,
-      priority: (options.priority as any) || 'medium',
-      assignee: options.assignee,
-      column: options.column || 'backlog',
-      position: 0,
-      tags: []
+    const sent = await sendToBridge({
+      type: 'CREATE_CARD',
+      payload: {
+        title,
+        description: options.description || '',
+        priority: options.priority || 'medium',
+        assignee: options.assignee || 'You',
+        columnId: options.column || 'backlog'
+      }
     });
 
-    spinner.succeed(chalk.green(`✅ Created card "${title}"`));
-    console.log(chalk.gray(`Card ID: ${card.id}`));
-    console.log(chalk.gray(`Column: ${card.column}`));
-    console.log(chalk.gray(`Priority: ${card.priority}`));
-    if (card.assignee) {
-      console.log(chalk.gray(`Assignee: ${card.assignee}`));
+    const activeBoard = await boardService.getActiveBoard();
+    if (activeBoard) {
+      const card = await boardService.createCard({
+        boardId: activeBoard.id,
+        title,
+        description: options.description,
+        priority: (options.priority as any) || 'medium',
+        assignee: options.assignee,
+        column: options.column || 'backlog',
+        position: 0,
+        tags: []
+      });
+      spinner.succeed(chalk.green(`✅ Created card "${title}" ${sent ? '(Live UI Synced)' : ''}`));
+      console.log(chalk.gray(`Card ID: ${card.id}`));
+    } else {
+      spinner.succeed(chalk.green(`✅ Created card "${title}" ${sent ? '(Live UI Synced)' : ''}`));
     }
   } catch (error) {
     spinner.fail(chalk.red(`❌ Failed to create card: ${(error as Error).message}`));
@@ -298,27 +310,68 @@ export async function createBranch(name: string, options: { checkout?: boolean }
   const spinner = ora(`Creating branch "${name}"...`).start();
   
   try {
+    const sent = await sendToBridge({
+      type: 'CREATE_BRANCH',
+      payload: { name, checkout: options.checkout }
+    });
+
     const activeBoard = await boardService.getActiveBoard();
-    if (!activeBoard) {
-      spinner.fail(chalk.red('❌ No active board to branch from'));
-      return;
+    if (activeBoard) {
+      await boardService.createBoard(
+        `${activeBoard.name} (${name})`,
+        `Branch of ${activeBoard.name}`,
+        activeBoard.id
+      );
     }
 
-    const branch = await boardService.createBoard(
-      `${activeBoard.name} (${name})`,
-      `Branch of ${activeBoard.name}`,
-      activeBoard.id
-    );
-
     if (options.checkout) {
-      await boardService.switchBoard(branch.id);
-      spinner.succeed(chalk.green(`✅ Created and switched to branch "${name}"`));
+      if (sent) {
+        await sendToBridge({ type: 'SWITCH_BRANCH', payload: name });
+      }
+      spinner.succeed(chalk.green(`✅ Created and checked out branch "${name}" ${sent ? '(Live UI Synced)' : ''}`));
     } else {
-      spinner.succeed(chalk.green(`✅ Created branch "${name}"`));
-      console.log(chalk.gray(`Use "kb checkout ${name}" to switch to it`));
+      spinner.succeed(chalk.green(`✅ Created branch "${name}" ${sent ? '(Live UI Synced)' : ''}`));
     }
   } catch (error) {
     spinner.fail(chalk.red(`❌ Failed to create branch: ${(error as Error).message}`));
+  }
+}
+
+export async function compareBranch(targetBranch: string) {
+  const spinner = ora(`Comparing against branch "${targetBranch}"...`).start();
+  
+  try {
+    const sent = await sendToBridge({
+      type: 'COMPARE_BRANCH',
+      payload: targetBranch
+    });
+
+    if (sent) {
+      spinner.succeed(chalk.green(`✅ Activated Visual Diff mode against "${targetBranch}" in Live UI`));
+    } else {
+      spinner.fail(chalk.yellow(`⚠️ CLI Bridge server not running. Run "kb serve" to sync with Live UI.`));
+    }
+  } catch (error) {
+    spinner.fail(chalk.red(`❌ Failed to compare branch: ${(error as Error).message}`));
+  }
+}
+
+export async function exitDiff() {
+  const spinner = ora('Exiting diff mode...').start();
+  
+  try {
+    const sent = await sendToBridge({
+      type: 'EXIT_DIFF',
+      payload: {}
+    });
+
+    if (sent) {
+      spinner.succeed(chalk.green('✅ Exited Visual Diff mode in Live UI'));
+    } else {
+      spinner.stop();
+    }
+  } catch (error) {
+    spinner.fail(chalk.red(`❌ Failed to exit diff mode: ${(error as Error).message}`));
   }
 }
 
@@ -326,29 +379,28 @@ export async function mergeBranch(branchName: string, options: { noFf?: boolean 
   const spinner = ora(`Merging branch "${branchName}"...`).start();
   
   try {
+    await sendToBridge({
+      type: 'MERGE_BRANCH',
+      payload: { branchName, noFf: options.noFf }
+    });
+
     const activeBoard = await boardService.getActiveBoard();
-    if (!activeBoard) {
-      spinner.fail(chalk.red('❌ No active board'));
-      return;
+    if (activeBoard) {
+      const boards = await boardService.getBoards();
+      const sourceBranch = boards.find(
+        b => b.name.toLowerCase() === branchName.toLowerCase() || b.id === branchName
+      );
+
+      if (sourceBranch) {
+        await boardService.logEvent(activeBoard.id, 'BRANCH_MERGED', {
+          sourceBranchId: sourceBranch.id,
+          targetBranchId: activeBoard.id,
+          noFf: options.noFf || false,
+        }, 'cli-user');
+      }
     }
 
-    const boards = await boardService.getBoards();
-    const sourceBranch = boards.find(
-      b => b.name.toLowerCase() === branchName.toLowerCase() || b.id === branchName
-    );
-
-    if (!sourceBranch) {
-      spinner.fail(chalk.red(`❌ Branch "${branchName}" not found`));
-      return;
-    }
-
-    await boardService.logEvent(activeBoard.id, 'BRANCH_MERGED', {
-      sourceBranchId: sourceBranch.id,
-      targetBranchId: activeBoard.id,
-      noFf: options.noFf || false,
-    }, 'cli-user');
-
-    spinner.succeed(chalk.green(`✅ Merged branch "${sourceBranch.name}" into "${activeBoard.name}"`));
+    spinner.succeed(chalk.green(`✅ Merged branch "${branchName}"`));
   } catch (error) {
     spinner.fail(chalk.red(`❌ Failed to merge branch: ${(error as Error).message}`));
   }

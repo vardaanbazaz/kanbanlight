@@ -22,6 +22,7 @@ export const KanbanBoard: React.FC = () => {
     isDiffModeActive,
     diffTargetBranchId,
     branchDiff,
+    isCliConnected,
     showPluginManager,
     showBranchManager,
     showSmartCardCreator,
@@ -56,6 +57,13 @@ export const KanbanBoard: React.FC = () => {
                 {activeBranchId}@{events.length}
               </span>
             </div>
+
+            {isCliConnected && (
+              <div className="flex items-center space-x-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full font-mono font-medium" title="CLI Bridge Active (ws://localhost:8080)">
+                <Terminal className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+                <span>CLI Connected</span>
+              </div>
+            )}
             
             {insights && (
               <div className="flex items-center space-x-2 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full">

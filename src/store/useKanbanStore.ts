@@ -3,6 +3,17 @@ import { Board, Card, Column, Conflict, Event, User } from '../types';
 import { databaseService } from '../services/DatabaseService';
 import { CollaborationService } from '../services/CollaborationService';
 import { aiService } from '../services/AIService';
+import { branchingService } from '../services/BranchingService';
+
+export type StoreApi<T> = {
+  getState: () => T;
+  setState: (partial: Partial<T> | ((state: T) => Partial<T>)) => void;
+  subscribe: (listener: () => void) => () => void;
+};
+
+export type UseStore<T> = {
+  <U = T>(selector?: (state: T) => U): U;
+} & StoreApi<T>;
 
 // Idiomatic lightweight Zustand implementation using React's useSyncExternalStore
 export function createStore<T>(
@@ -10,7 +21,7 @@ export function createStore<T>(
     set: (partial: Partial<T> | ((state: T) => Partial<T>)) => void,
     get: () => T
   ) => T
-) {
+): UseStore<T> {
   let state: T;
   const listeners = new Set<() => void>();
 
@@ -31,10 +42,10 @@ export function createStore<T>(
 
   state = createState(setState, getState);
 
-  const useStore = <U = T>(selector?: (state: T) => U): U => {
+  const useStore = (<U = T>(selector?: (state: T) => U): U => {
     const slice = useSyncExternalStore(subscribe, getState, getState);
     return selector ? selector(slice) : (slice as unknown as U);
-  };
+  }) as UseStore<T>;
 
   Object.assign(useStore, { getState, setState, subscribe });
 
@@ -48,6 +59,9 @@ export interface KanbanState {
   cards: Card[];
   events: Event[];
   
+  // Branching State
+  activeBranchId: string;
+
   // Collaboration & Presence State
   users: User[];
   currentUser: User | null;
@@ -76,7 +90,11 @@ export interface KanbanState {
   updateCard: (cardId: string, updates: Partial<Card>) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   dispatchBoardEvent: (event: Omit<Event, 'id' | 'timestamp'>) => Promise<void>;
-  
+
+  // Branching Actions
+  createSnapshot: (branchId?: string) => Promise<void>;
+  switchBranch: (targetBranchId: string) => Promise<boolean>;
+
   // Collaboration Actions
   resolveConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merge') => void;
   updateCursor: (x: number, y: number) => void;
@@ -104,6 +122,7 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
   columns: DEFAULT_COLUMNS,
   cards: [],
   events: [],
+  activeBranchId: 'main',
   users: [],
   currentUser: null,
   conflicts: [],
@@ -172,6 +191,8 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
       // Initialize AI Service
       aiService.initialize().catch(console.error);
 
+      const activeBranchId = branchingService.getCurrentBranch()?.id || 'main';
+
       set({
         board: activeBoard,
         cards: loadedCards,
@@ -179,8 +200,15 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
         currentUser,
         collaborationService: colService,
         connectionStatus: colService.getConnectionStatus(),
+        activeBranchId,
         isInitialized: true,
       });
+
+      // Ensure active branch snapshot exists
+      const currentSnapshot = await databaseService.getLatestSnapshotByBranch(activeBranchId);
+      if (!currentSnapshot) {
+        await get().createSnapshot(activeBranchId);
+      }
 
       // Initial AI insights run using real loaded cards and events
       get().generateAIInsights();
@@ -301,6 +329,67 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
     set((state) => ({
       events: [...state.events, fullEvent],
     }));
+  },
+
+  createSnapshot: async (branchId?: string) => {
+    const targetBranch = branchId || get().activeBranchId || 'main';
+    const boardId = get().board?.id || 'default-board';
+    const snapshotData = {
+      cards: get().cards,
+      columns: get().columns,
+      events: get().events,
+      board: get().board,
+    };
+
+    await databaseService.createSnapshot(
+      boardId,
+      snapshotData,
+      `Snapshot for branch ${targetBranch} at ${new Date().toLocaleTimeString()}`,
+      targetBranch
+    );
+  },
+
+  switchBranch: async (targetBranchId: string) => {
+    const currentBranchId = get().activeBranchId;
+
+    try {
+      // 1. Save snapshot of current active branch before switching
+      if (currentBranchId) {
+        await get().createSnapshot(currentBranchId);
+      }
+
+      // 2. Query DatabaseService for latest snapshot of target branch
+      const snapshot = await databaseService.getLatestSnapshotByBranch(targetBranchId);
+
+      if (snapshot && snapshot.data) {
+        const { cards, columns, events, board } = snapshot.data;
+
+        set({
+          cards: cards || [],
+          columns: columns || DEFAULT_COLUMNS,
+          events: events || [],
+          board: board || get().board,
+          activeBranchId: targetBranchId,
+        });
+
+        const boardId = (board && board.id) || get().board?.id || 'default-board';
+        await databaseService.syncActiveBoardCardsAndEvents(boardId, cards || [], events || []);
+      } else {
+        // If target branch snapshot doesn't exist yet, preserve current state and snapshot it under target branch
+        set({ activeBranchId: targetBranchId });
+        await get().createSnapshot(targetBranchId);
+      }
+
+      // 3. Sync BranchingService active branch reference
+      branchingService.setActiveBranchId(targetBranchId);
+
+      // Re-trigger AI insights
+      get().generateAIInsights();
+      return true;
+    } catch (error) {
+      console.error('Failed to switch branch:', error);
+      return false;
+    }
   },
 
   resolveConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merge') => {

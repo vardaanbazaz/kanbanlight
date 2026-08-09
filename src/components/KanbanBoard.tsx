@@ -19,6 +19,7 @@ export const KanbanBoard: React.FC = () => {
     connectionStatus,
     insights,
     isAIProcessing,
+    activeBranchId,
     showPluginManager,
     showBranchManager,
     showSmartCardCreator,
@@ -69,8 +70,8 @@ export const KanbanBoard: React.FC = () => {
             <div className="flex items-center space-x-2">
               <GitBranch className="w-6 h-6 text-slate-700" />
               <h1 className="text-xl font-semibold text-slate-900">KanbanLight</h1>
-              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
-                main@{events.length}
+              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-mono">
+                {activeBranchId}@{events.length}
               </span>
             </div>
             

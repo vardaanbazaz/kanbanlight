@@ -26,7 +26,8 @@ interface KanbanDB extends DBSchema {
     value: {
       id: string;
       boardId: string;
-      data: Board;
+      branchId?: string;
+      data: any;
       timestamp: number;
       description: string;
     };
@@ -100,7 +101,8 @@ class DatabaseService {
 
   async getCardsByBoard(boardId: string): Promise<Card[]> {
     if (!this.db) throw new Error('Database not initialized');
-    return await this.db.getAllFromIndex('cards', 'by-board', boardId);
+    const cards = await this.db.getAll('cards');
+    return cards.filter((c: any) => !c.boardId || c.boardId === boardId);
   }
 
   async getCardsByColumn(columnId: string): Promise<Card[]> {
@@ -128,7 +130,8 @@ class DatabaseService {
 
   async getEventsByBoard(boardId: string): Promise<Event[]> {
     if (!this.db) throw new Error('Database not initialized');
-    return await this.db.getAllFromIndex('events', 'by-board', boardId);
+    const events = await this.db.getAll('events');
+    return events.filter((e: any) => !e.boardId || e.boardId === boardId);
   }
 
   async getEventsAfterTimestamp(boardId: string, timestamp: number): Promise<Event[]> {
@@ -145,11 +148,12 @@ class DatabaseService {
   }
 
   // Snapshot operations
-  async createSnapshot(boardId: string, data: Board, description: string): Promise<string> {
+  async createSnapshot(boardId: string, data: any, description: string = '', branchId: string = 'main'): Promise<string> {
     if (!this.db) throw new Error('Database not initialized');
     const snapshot = {
-      id: `snapshot-${Date.now()}`,
+      id: `snapshot-${branchId}-${Date.now()}`,
       boardId,
+      branchId,
       data,
       timestamp: Date.now(),
       description
@@ -161,6 +165,37 @@ class DatabaseService {
   async getSnapshotsByBoard(boardId: string) {
     if (!this.db) throw new Error('Database not initialized');
     return await this.db.getAllFromIndex('snapshots', 'by-board', boardId);
+  }
+
+  async getSnapshotsByBranch(branchId: string) {
+    if (!this.db) throw new Error('Database not initialized');
+    const all = await this.db.getAll('snapshots');
+    return all
+      .filter((s: any) => s.branchId === branchId || (!s.branchId && branchId === 'main'))
+      .sort((a: any, b: any) => b.timestamp - a.timestamp);
+  }
+
+  async getLatestSnapshotByBranch(branchId: string) {
+    const snapshots = await this.getSnapshotsByBranch(branchId);
+    return snapshots.length > 0 ? snapshots[0] : undefined;
+  }
+
+  async syncActiveBoardCardsAndEvents(boardId: string, cards: Card[], events: Event[]): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const existingCards = await this.db.getAll('cards');
+    const existingEvents = await this.db.getAll('events');
+
+    const tx = this.db.transaction(['cards', 'events'], 'readwrite');
+    await Promise.all([
+      ...existingCards.map(card => tx.objectStore('cards').delete(card.id)),
+      ...existingEvents.map(event => tx.objectStore('events').delete(event.id))
+    ]);
+
+    await Promise.all([
+      ...cards.map(card => tx.objectStore('cards').put({ ...card, boardId })),
+      ...events.map(event => tx.objectStore('events').put({ ...event, boardId }))
+    ]);
   }
 
   private async deleteSnapshotsByBoard(boardId: string): Promise<void> {

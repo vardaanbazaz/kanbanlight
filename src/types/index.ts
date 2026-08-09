@@ -10,6 +10,7 @@ export interface Card {
   createdAt: number;
   updatedAt: number;
   conflicts: Conflict[];
+  boardId?: string;
 }
 
 export interface Column {

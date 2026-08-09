@@ -1,17 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { GitBranch, GitMerge, Plus, Check, Clock, User, ArrowRight } from 'lucide-react';
-import { branchingService } from '../services/BranchingService';
-
-interface BoardBranch {
-  id: string;
-  name: string;
-  parentId: string | null;
-  boardSnapshot: any;
-  createdAt: number;
-  lastCommit: string;
-  author: string;
-  description?: string;
-}
+import { GitBranch, GitMerge, Plus, Check, Clock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { branchingService, BoardBranch } from '../services/BranchingService';
+import { useKanbanStore } from '../store/useKanbanStore';
 
 export const BranchManager: React.FC = () => {
   const [branches, setBranches] = useState<BoardBranch[]>([]);
@@ -20,31 +10,66 @@ export const BranchManager: React.FC = () => {
   const [newBranchName, setNewBranchName] = useState('');
   const [newBranchDescription, setNewBranchDescription] = useState('');
   const [selectedMergeBranch, setSelectedMergeBranch] = useState<string>('');
+  const [isSwitching, setIsSwitching] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const activeBranchId = useKanbanStore((state) => state.activeBranchId);
 
   useEffect(() => {
     loadBranches();
-  }, []);
+  }, [activeBranchId]);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   const loadBranches = () => {
     setBranches(branchingService.getBranches());
     setCurrentBranch(branchingService.getCurrentBranch());
   };
 
-  const handleCreateBranch = () => {
-    if (!newBranchName.trim()) return;
+  const handleCreateBranch = async () => {
+    if (!newBranchName.trim() || isSwitching) return;
 
-    const parentId = currentBranch?.id || null;
-    branchingService.createBranch(newBranchName, parentId, newBranchDescription);
-    
-    setNewBranchName('');
-    setNewBranchDescription('');
-    setIsCreatingBranch(false);
-    loadBranches();
+    setIsSwitching(true);
+    const parentId = currentBranch?.id || 'main';
+    const branchName = newBranchName.trim();
+
+    try {
+      await branchingService.createBranch(branchName, parentId, newBranchDescription);
+      setNewBranchName('');
+      setNewBranchDescription('');
+      setIsCreatingBranch(false);
+      loadBranches();
+      showToast(`Branch "${branchName}" created & active!`, 'success');
+    } catch (error) {
+      console.error('Error creating branch:', error);
+      showToast('Failed to create branch.', 'error');
+    } finally {
+      setIsSwitching(false);
+    }
   };
 
-  const handleSwitchBranch = (branchId: string) => {
-    if (branchingService.switchBranch(branchId)) {
-      loadBranches();
+  const handleSwitchBranch = async (branchId: string) => {
+    if (isSwitching) return;
+
+    const targetBranch = branches.find((b) => b.id === branchId);
+    setIsSwitching(true);
+
+    try {
+      const success = await branchingService.switchBranch(branchId);
+      if (success) {
+        loadBranches();
+        showToast(`Switched to branch "${targetBranch?.name || branchId}"`, 'success');
+      } else {
+        showToast('Failed to switch branch.', 'error');
+      }
+    } catch (error) {
+      console.error('Error switching branch:', error);
+      showToast('Failed to switch branch.', 'error');
+    } finally {
+      setIsSwitching(false);
     }
   };
 
@@ -54,11 +79,10 @@ export const BranchManager: React.FC = () => {
     const result = branchingService.mergeBranch(selectedMergeBranch, currentBranch.id);
     
     if (result.success) {
-      console.log('Merge successful!');
+      showToast('Merge successful!', 'success');
       loadBranches();
     } else {
-      console.log('Merge conflicts detected:', result.conflicts);
-      // Handle conflicts in UI
+      showToast('Merge conflicts detected', 'error');
     }
     
     setSelectedMergeBranch('');
@@ -77,15 +101,37 @@ export const BranchManager: React.FC = () => {
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
+      {/* Toast Banner */}
+      {toast && (
+        <div className={`p-3 text-sm font-medium border-b flex items-center justify-between transition-all ${
+          toast.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-red-50 text-red-800 border-red-200'
+        }`}>
+          <div className="flex items-center space-x-2">
+            <Check className="w-4 h-4 text-emerald-600" />
+            <span>{toast.message}</span>
+          </div>
+          <button onClick={() => setToast(null)} className="text-xs text-slate-500 hover:text-slate-700">
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-200">
         <div className="flex items-center space-x-3">
           <GitBranch className="w-5 h-5 text-blue-600" />
           <h3 className="font-medium text-slate-800">Branch Manager</h3>
+          {isSwitching && (
+            <span className="flex items-center space-x-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Switching...</span>
+            </span>
+          )}
         </div>
         <button
           onClick={() => setIsCreatingBranch(true)}
-          className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          disabled={isSwitching}
+          className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>New Branch</span>
@@ -99,7 +145,7 @@ export const BranchManager: React.FC = () => {
             <Check className="w-5 h-5 text-green-600" />
             <div>
               <h4 className="font-medium text-green-800">{currentBranch.name}</h4>
-              <p className="text-sm text-green-600">Current branch</p>
+              <p className="text-sm text-green-600">Current active branch</p>
             </div>
           </div>
         </div>
@@ -148,9 +194,11 @@ export const BranchManager: React.FC = () => {
             {branch.id !== currentBranch?.id && (
               <button
                 onClick={() => handleSwitchBranch(branch.id)}
-                className="px-2 py-1 text-xs text-blue-600 hover:text-blue-700 border border-blue-200 rounded hover:bg-blue-50 transition-colors"
+                disabled={isSwitching}
+                className="flex items-center space-x-1 px-2.5 py-1 text-xs text-blue-600 hover:text-blue-700 border border-blue-200 rounded hover:bg-blue-50 disabled:opacity-50 transition-colors"
               >
-                Switch
+                {isSwitching && <Loader2 className="w-3 h-3 animate-spin" />}
+                <span>Switch</span>
               </button>
             )}
           </div>

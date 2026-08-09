@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { Board, Card, Column, Conflict, Event, User } from '../types';
+import { Board, Card, Column, Conflict, Event, User, BranchDiff } from '../types';
 import { databaseService } from '../services/DatabaseService';
 import { CollaborationService } from '../services/CollaborationService';
 import { aiService } from '../services/AIService';
@@ -63,6 +63,11 @@ export interface KanbanState {
   // Branching State
   activeBranchId: string;
 
+  // Visual Diff Mode State
+  isDiffModeActive: boolean;
+  diffTargetBranchId: string | null;
+  branchDiff: BranchDiff | null;
+
   // Collaboration & Presence State
   users: User[];
   currentUser: User | null;
@@ -96,6 +101,10 @@ export interface KanbanState {
   createSnapshot: (branchId?: string) => Promise<void>;
   switchBranch: (targetBranchId: string) => Promise<boolean>;
 
+  // Diff Mode Actions
+  startBranchDiff: (targetBranchId: string) => Promise<boolean>;
+  exitDiffMode: () => void;
+
   // Collaboration Actions
   resolveConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merge') => void;
   updateCursor: (x: number, y: number) => void;
@@ -124,6 +133,9 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
   cards: [],
   events: [],
   activeBranchId: 'main',
+  isDiffModeActive: false,
+  diffTargetBranchId: null,
+  branchDiff: null,
   users: [],
   currentUser: null,
   conflicts: [],
@@ -400,6 +412,71 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
       console.error('Failed to switch branch:', error);
       return false;
     }
+  },
+
+  startBranchDiff: async (targetBranchId: string) => {
+    try {
+      const snapshot = await databaseService.getLatestSnapshotByBranch(targetBranchId);
+      const targetCards: Card[] = snapshot?.data?.cards || [];
+      const currentCards: Card[] = get().cards;
+
+      const targetMap = new Map<string, Card>(targetCards.map((c) => [c.id, c]));
+      const currentMap = new Map<string, Card>(currentCards.map((c) => [c.id, c]));
+
+      const addedCards: Card[] = [];
+      const modifiedCards: Card[] = [];
+      const deletedCards: Card[] = [];
+
+      // Find Added & Modified cards
+      for (const card of currentCards) {
+        const targetCard = targetMap.get(card.id);
+        if (!targetCard) {
+          addedCards.push(card);
+        } else {
+          const isModified =
+            card.columnId !== targetCard.columnId ||
+            card.title !== targetCard.title ||
+            card.description !== targetCard.description ||
+            card.priority !== targetCard.priority ||
+            card.assignee !== targetCard.assignee ||
+            JSON.stringify(card.tags) !== JSON.stringify(targetCard.tags);
+
+          if (isModified) {
+            modifiedCards.push(card);
+          }
+        }
+      }
+
+      // Find Deleted cards (present in target snapshot but missing in current active cards)
+      for (const targetCard of targetCards) {
+        if (!currentMap.has(targetCard.id)) {
+          deletedCards.push(targetCard);
+        }
+      }
+
+      set({
+        isDiffModeActive: true,
+        diffTargetBranchId: targetBranchId,
+        branchDiff: {
+          addedCards,
+          deletedCards,
+          modifiedCards,
+        },
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Failed to compute branch diff:', error);
+      return false;
+    }
+  },
+
+  exitDiffMode: () => {
+    set({
+      isDiffModeActive: false,
+      diffTargetBranchId: null,
+      branchDiff: null,
+    });
   },
 
   resolveConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merge') => {

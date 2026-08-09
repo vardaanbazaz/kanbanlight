@@ -22,7 +22,23 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
       }))
   );
 
+  const isDiffModeActive = useKanbanStore((state) => state.isDiffModeActive);
+  const branchDiff = useKanbanStore((state) => state.branchDiff);
   const createCard = useKanbanStore((state) => state.createCard);
+
+  const addedIds = new Set(branchDiff?.addedCards.map((c) => c.id) || []);
+  const modifiedIds = new Set(branchDiff?.modifiedCards.map((c) => c.id) || []);
+
+  const deletedCardsInColumn = isDiffModeActive && branchDiff
+    ? branchDiff.deletedCards
+        .filter((card) => card.columnId === id)
+        .map((card) => ({
+          ...card,
+          lastModified: new Date(card.updatedAt || card.createdAt),
+          conflicts: card.conflicts || [],
+          tags: card.tags || [],
+        }))
+    : [];
 
   const colorClasses = {
     slate: 'bg-slate-100 border-slate-200',
@@ -48,7 +64,7 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
           <div className="flex items-center space-x-2">
             <h3 className="font-semibold text-slate-800">{title}</h3>
             <span className="text-xs bg-white bg-opacity-60 text-slate-600 px-2 py-1 rounded-full">
-              {cards.length}
+              {cards.length + deletedCardsInColumn.length}
             </span>
           </div>
           <div className="flex items-center space-x-1">
@@ -64,8 +80,18 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
 
       {/* Cards Container */}
       <div className="flex-1 bg-white border-l-2 border-r-2 border-slate-200 p-4 space-y-3 overflow-y-auto">
-        {cards.map((card: any) => (
-          <Card key={card.id} card={card} />
+        {cards.map((card: any) => {
+          let diffStatus: 'added' | 'modified' | 'deleted' | undefined;
+          if (isDiffModeActive) {
+            if (addedIds.has(card.id)) diffStatus = 'added';
+            else if (modifiedIds.has(card.id)) diffStatus = 'modified';
+          }
+          return <Card key={card.id} card={card} diffStatus={diffStatus} />;
+        })}
+
+        {/* Deleted Cards (Ghosted) */}
+        {deletedCardsInColumn.map((card: any) => (
+          <Card key={`deleted-${card.id}`} card={card} diffStatus="deleted" />
         ))}
 
         {/* Add Card */}

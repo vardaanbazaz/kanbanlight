@@ -107,6 +107,10 @@ class BranchingService {
     return success;
   }
 
+  async compareBranch(targetBranchId: string): Promise<boolean> {
+    return await useKanbanStore.getState().startBranchDiff(targetBranchId);
+  }
+
   mergeBranch(sourceBranchId: string, targetBranchId: string): MergeResult {
     const sourceBranch = this.branches.get(sourceBranchId);
     const targetBranch = this.branches.get(targetBranchId);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GitBranch, GitMerge, Plus, Check, Clock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { GitBranch, GitMerge, Plus, Check, Clock, User, ArrowRight, Loader2, Eye } from 'lucide-react';
 import { branchingService, BoardBranch } from '../services/BranchingService';
 import { useKanbanStore } from '../store/useKanbanStore';
 
@@ -14,6 +14,8 @@ export const BranchManager: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const activeBranchId = useKanbanStore((state) => state.activeBranchId);
+  const startBranchDiff = useKanbanStore((state) => state.startBranchDiff);
+  const setShowBranchManager = useKanbanStore((state) => state.setShowBranchManager);
 
   useEffect(() => {
     loadBranches();
@@ -73,6 +75,24 @@ export const BranchManager: React.FC = () => {
     }
   };
 
+  const handleCompareBranch = async (branchId: string) => {
+    if (isSwitching) return;
+    setIsSwitching(true);
+    try {
+      const success = await startBranchDiff(branchId);
+      if (success) {
+        setShowBranchManager(false);
+      } else {
+        showToast('Failed to compare branch.', 'error');
+      }
+    } catch (error) {
+      console.error('Error comparing branch:', error);
+      showToast('Failed to compare branch.', 'error');
+    } finally {
+      setIsSwitching(false);
+    }
+  };
+
   const handleMergeBranch = () => {
     if (!selectedMergeBranch || !currentBranch) return;
 
@@ -124,7 +144,7 @@ export const BranchManager: React.FC = () => {
           {isSwitching && (
             <span className="flex items-center space-x-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
               <Loader2 className="w-3 h-3 animate-spin" />
-              <span>Switching...</span>
+              <span>Working...</span>
             </span>
           )}
         </div>
@@ -192,14 +212,26 @@ export const BranchManager: React.FC = () => {
             </div>
 
             {branch.id !== currentBranch?.id && (
-              <button
-                onClick={() => handleSwitchBranch(branch.id)}
-                disabled={isSwitching}
-                className="flex items-center space-x-1 px-2.5 py-1 text-xs text-blue-600 hover:text-blue-700 border border-blue-200 rounded hover:bg-blue-50 disabled:opacity-50 transition-colors"
-              >
-                {isSwitching && <Loader2 className="w-3 h-3 animate-spin" />}
-                <span>Switch</span>
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleCompareBranch(branch.id)}
+                  disabled={isSwitching}
+                  className="flex items-center space-x-1 px-2.5 py-1 text-xs text-indigo-600 hover:text-indigo-700 border border-indigo-200 rounded hover:bg-indigo-50 disabled:opacity-50 transition-colors"
+                  title="Compare against this branch"
+                >
+                  <Eye className="w-3 h-3" />
+                  <span>Compare</span>
+                </button>
+
+                <button
+                  onClick={() => handleSwitchBranch(branch.id)}
+                  disabled={isSwitching}
+                  className="flex items-center space-x-1 px-2.5 py-1 text-xs text-blue-600 hover:text-blue-700 border border-blue-200 rounded hover:bg-blue-50 disabled:opacity-50 transition-colors"
+                >
+                  {isSwitching && <Loader2 className="w-3 h-3 animate-spin" />}
+                  <span>Switch</span>
+                </button>
+              </div>
             )}
           </div>
         ))}

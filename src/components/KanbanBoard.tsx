@@ -19,11 +19,15 @@ export const KanbanBoard: React.FC = () => {
     insights,
     isAIProcessing,
     activeBranchId,
+    isDiffModeActive,
+    diffTargetBranchId,
+    branchDiff,
     showPluginManager,
     showBranchManager,
     showSmartCardCreator,
     initializeStore,
     resolveConflict,
+    exitDiffMode,
     setCommandPaletteOpen,
     setShowPluginManager,
     setShowBranchManager,
@@ -144,6 +148,36 @@ export const KanbanBoard: React.FC = () => {
           </div>
         </div>
       </header>
+
+      {/* Visual Diff Floating Mode Banner */}
+      {isDiffModeActive && (
+        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white px-6 py-3 shadow-md flex items-center justify-between z-40 border-b border-indigo-700 animate-fadeIn">
+          <div className="flex items-center space-x-3 text-sm">
+            <div className="flex items-center space-x-2 bg-indigo-800/80 px-3 py-1 rounded-md border border-indigo-600 font-mono text-xs">
+              <GitBranch className="w-3.5 h-3.5 text-blue-300" />
+              <span className="font-semibold text-blue-200">{activeBranchId}</span>
+              <span className="text-slate-400">vs</span>
+              <span className="font-semibold text-purple-200">{diffTargetBranchId}</span>
+            </div>
+            <span className="text-slate-300 font-medium">Visual Diff Active:</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              +{branchDiff?.addedCards.length || 0} Added
+            </span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              ~{branchDiff?.modifiedCards.length || 0} Modified
+            </span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-500/20 text-red-300 border border-red-500/40">
+              -{branchDiff?.deletedCards.length || 0} Deleted
+            </span>
+          </div>
+          <button
+            onClick={exitDiffMode}
+            className="flex items-center space-x-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-md shadow transition-colors"
+          >
+            <span>Exit Diff Mode</span>
+          </button>
+        </div>
+      )}
 
       {/* Board */}
       <div className="flex-1 flex overflow-hidden">

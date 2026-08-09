@@ -69,3 +69,9 @@ export interface Plugin {
     onBoardLoad?: string;
   };
 }
+
+export interface BranchDiff {
+  addedCards: Card[];
+  deletedCards: Card[];
+  modifiedCards: Card[];
+}

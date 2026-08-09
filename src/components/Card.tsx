@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Clock, AlertTriangle, GitMerge, Tag } from 'lucide-react';
+import { User, Clock, AlertTriangle, GitMerge, Tag, PlusCircle, RefreshCw, Trash2 } from 'lucide-react';
 
 interface CardProps {
   card: {
@@ -12,9 +12,10 @@ interface CardProps {
     lastModified: Date;
     conflicts: any[];
   };
+  diffStatus?: 'added' | 'modified' | 'deleted';
 }
 
-export const Card: React.FC<CardProps> = ({ card }) => {
+export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const priorityColors = {
@@ -29,19 +30,52 @@ export const Card: React.FC<CardProps> = ({ card }) => {
     high: '●●●'
   };
 
+  const getDiffClasses = () => {
+    switch (diffStatus) {
+      case 'added':
+        return 'ring-2 ring-emerald-500 bg-emerald-50/70 border-emerald-300';
+      case 'modified':
+        return 'ring-2 ring-amber-500 bg-amber-50/70 border-amber-300';
+      case 'deleted':
+        return 'ring-2 ring-red-400 bg-red-50/60 opacity-60 pointer-events-none border-dashed border-red-300';
+      default:
+        return 'bg-white border-slate-200 hover:shadow-md';
+    }
+  };
+
   return (
     <div 
-      className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
-      onClick={() => setIsExpanded(!isExpanded)}
+      className={`border rounded-lg p-3 shadow-sm transition-all cursor-pointer group ${getDiffClasses()}`}
+      onClick={() => diffStatus !== 'deleted' && setIsExpanded(!isExpanded)}
     >
-      {/* Card Header */}
+      {/* Card Header & Diff Badge */}
       <div className="flex items-start justify-between mb-2">
         <h4 className="text-sm font-medium text-slate-800 flex-1 pr-2">
           {card.title}
         </h4>
-        {card.conflicts.length > 0 && (
-          <GitMerge className="w-4 h-4 text-amber-500 flex-shrink-0" />
-        )}
+        <div className="flex items-center space-x-1">
+          {diffStatus === 'added' && (
+            <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+              <PlusCircle className="w-3 h-3" />
+              <span>+ Added</span>
+            </span>
+          )}
+          {diffStatus === 'modified' && (
+            <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+              <RefreshCw className="w-3 h-3" />
+              <span>~ Modified</span>
+            </span>
+          )}
+          {diffStatus === 'deleted' && (
+            <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-800 border border-red-300">
+              <Trash2 className="w-3 h-3" />
+              <span>- Deleted</span>
+            </span>
+          )}
+          {card.conflicts && card.conflicts.length > 0 && (
+            <GitMerge className="w-4 h-4 text-amber-500 flex-shrink-0" />
+          )}
+        </div>
       </div>
 
       {/* Card Description */}
@@ -58,7 +92,7 @@ export const Card: React.FC<CardProps> = ({ card }) => {
           <span className="capitalize">{card.priority}</span>
         </div>
         
-        {card.conflicts.length > 0 && (
+        {card.conflicts && card.conflicts.length > 0 && (
           <div className="flex items-center space-x-1 text-xs text-amber-600">
             <AlertTriangle className="w-3 h-3" />
             <span>{card.conflicts.length} conflicts</span>
@@ -67,7 +101,7 @@ export const Card: React.FC<CardProps> = ({ card }) => {
       </div>
 
       {/* Tags */}
-      {card.tags.length > 0 && (
+      {card.tags && card.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
           {card.tags.map((tag) => (
             <span
@@ -89,12 +123,12 @@ export const Card: React.FC<CardProps> = ({ card }) => {
         </div>
         <div className="flex items-center space-x-1">
           <Clock className="w-3 h-3" />
-          <span>{card.lastModified.toLocaleDateString()}</span>
+          <span>{card.lastModified ? card.lastModified.toLocaleDateString() : 'N/A'}</span>
         </div>
       </div>
 
       {/* Expanded Actions */}
-      {isExpanded && (
+      {isExpanded && diffStatus !== 'deleted' && (
         <div className="mt-3 pt-3 border-t border-slate-100 flex justify-end space-x-2">
           <button className="px-2 py-1 text-xs text-slate-500 hover:text-slate-700 border border-slate-200 rounded">
             Edit

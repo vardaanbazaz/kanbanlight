@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { GitBranch, Users, Zap, Terminal, Wifi, WifiOff, Database, Package, Sun, Moon, HelpCircle } from 'lucide-react';
+import { GitBranch, Users, Zap, Terminal, Wifi, WifiOff, Database, Sun, Moon, HelpCircle } from 'lucide-react';
 import { Column } from './Column';
 import { CollaborativeCursor } from './CollaborativeCursor';
 import { ConflictResolutionModal } from './ConflictResolutionModal';
 import { AIInsightsPanel } from './AIInsightsPanel';
 import { SmartCardCreator } from './SmartCardCreator';
-import { PluginManager } from './PluginManager';
 import { BranchManager } from './BranchManager';
 import { Tooltip } from './Tooltip';
 import { GuidedTour } from './GuidedTour';
@@ -26,14 +25,12 @@ export const KanbanBoard: React.FC = () => {
     diffTargetBranchId,
     branchDiff,
     isCliConnected,
-    showPluginManager,
     showBranchManager,
     showSmartCardCreator,
     initializeStore,
     resolveConflict,
     exitDiffMode,
     setCommandPaletteOpen,
-    setShowPluginManager,
     setShowBranchManager,
     setShowSmartCardCreator,
     createCard,
@@ -166,15 +163,6 @@ export const KanbanBoard: React.FC = () => {
 
             {/* Header Control Icons */}
             <div className="flex items-center space-x-1 border-l border-slate-200 dark:border-zinc-800 pl-3">
-              <Tooltip content="Plugin Manager" position="bottom">
-                <button
-                  onClick={() => setShowPluginManager(true)}
-                  className="p-2 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-slate-500 dark:text-zinc-400"
-                >
-                  <Package className="w-4 h-4" />
-                </button>
-              </Tooltip>
-              
               <Tooltip content="Branch Manager" position="bottom">
                 <button
                   data-tour="branch-manager-btn"
@@ -300,26 +288,6 @@ export const KanbanBoard: React.FC = () => {
           onCreateCard={handleCreateSmartCard}
           onClose={() => setShowSmartCardCreator(false)}
         />
-      )}
-
-      {/* Plugin Manager Modal */}
-      {showPluginManager && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between z-10">
-              <h2 className="text-lg font-semibold text-slate-800 dark:text-zinc-100">Plugin Manager</h2>
-              <button
-                onClick={() => setShowPluginManager(false)}
-                className="p-2 text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6">
-              <PluginManager />
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Branch Manager Modal */}

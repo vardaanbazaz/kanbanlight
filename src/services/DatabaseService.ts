@@ -89,7 +89,7 @@ class DatabaseService {
           snapshotStore.createIndex('by-board', 'boardId');
         }
 
-        // Plugins store
+        // Plugins store: reserved for the parked plugin system; keep so un-parking needs no DB version bump
         if (!db.objectStoreNames.contains('plugins')) {
           db.createObjectStore('plugins', { keyPath: 'id' });
         }
@@ -251,27 +251,6 @@ class DatabaseService {
   async getAllUsers(): Promise<User[]> {
     if (!this.db) throw new Error('Database not initialized');
     return await this.db.getAll('users');
-  }
-
-  // Plugin operations
-  async savePlugin(plugin: StoredPlugin): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    await this.db.put('plugins', plugin);
-  }
-
-  async getPlugin(id: string): Promise<StoredPlugin | undefined> {
-    if (!this.db) throw new Error('Database not initialized');
-    return await this.db.get('plugins', id);
-  }
-
-  async getAllPlugins(): Promise<StoredPlugin[]> {
-    if (!this.db) throw new Error('Database not initialized');
-    return await this.db.getAll('plugins');
-  }
-
-  async deletePlugin(id: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    await this.db.delete('plugins', id);
   }
 
   // Utility methods

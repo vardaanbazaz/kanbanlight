@@ -56,20 +56,6 @@ export interface Event {
   boardId: string;
 }
 
-export interface Plugin {
-  id: string;
-  name: string;
-  version: string;
-  enabled: boolean;
-  wasmModule?: WebAssembly.Module;
-  wasmBytes?: ArrayBuffer | Uint8Array;
-  hooks: {
-    onCardCreate?: string;
-    onCardMove?: string;
-    onBoardLoad?: string;
-  };
-}
-
 export interface BranchDiff {
   addedCards: Card[];
   deletedCards: Card[];

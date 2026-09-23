@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Terminal, GitBranch, Zap, Users } from 'lucide-react';
+import { Search, Terminal, GitBranch, Zap } from 'lucide-react';
 import { useKanbanStore } from '../store/useKanbanStore';
 
 export const CommandPalette: React.FC = () => {
@@ -7,7 +7,6 @@ export const CommandPalette: React.FC = () => {
   const setIsOpen = useKanbanStore((state) => state.setCommandPaletteOpen);
   const setShowSmartCardCreator = useKanbanStore((state) => state.setShowSmartCardCreator);
   const setShowBranchManager = useKanbanStore((state) => state.setShowBranchManager);
-  const setShowPluginManager = useKanbanStore((state) => state.setShowPluginManager);
   const generateAIInsights = useKanbanStore((state) => state.generateAIInsights);
 
   const [query, setQuery] = useState('');
@@ -40,15 +39,6 @@ export const CommandPalette: React.FC = () => {
       shortcut: 'Ctrl+I',
       category: 'AI',
       action: () => generateAIInsights(),
-    },
-    {
-      id: 'plugin-manager',
-      title: 'Open Plugin Manager',
-      description: 'Manage WebAssembly plugins',
-      icon: <Users className="w-4 h-4" />,
-      shortcut: 'Ctrl+P',
-      category: 'Plugins',
-      action: () => setShowPluginManager(true),
     },
   ];
 

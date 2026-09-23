@@ -4,7 +4,6 @@ import { databaseService } from '../services/DatabaseService';
 import { CollaborationService } from '../services/CollaborationService';
 import { aiService } from '../services/AIService';
 import { branchingService } from '../services/BranchingService';
-import { pluginService } from '../services/PluginService';
 import { cliSyncService } from '../services/CliSyncService';
 
 export type StoreApi<T> = {
@@ -88,7 +87,6 @@ export interface KanbanState {
 
   // UI Navigation State
   isCommandPaletteOpen: boolean;
-  showPluginManager: boolean;
   showBranchManager: boolean;
   showSmartCardCreator: boolean;
   isInitialized: boolean;
@@ -118,7 +116,6 @@ export interface KanbanState {
   
   // UI Modal Actions
   setCommandPaletteOpen: (isOpen: boolean) => void;
-  setShowPluginManager: (show: boolean) => void;
   setShowBranchManager: (show: boolean) => void;
   setShowSmartCardCreator: (show: boolean) => void;
 }
@@ -152,7 +149,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
   velocityPrediction: null,
   taskSuggestions: [],
   isCommandPaletteOpen: false,
-  showPluginManager: false,
   showBranchManager: false,
   showSmartCardCreator: false,
   isInitialized: false,
@@ -205,15 +201,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
         colService.updateCursor(e.clientX, e.clientY);
       };
       window.addEventListener('mousemove', handleMouseMove);
-
-      // Initialize Plugin Service from IndexedDB
-      await pluginService.initialize({
-        board: activeBoard,
-        user: currentUser,
-        emit: (event: string, data: any) => {
-          console.log(`Plugin event [${event}]:`, data);
-        }
-      }).catch((err) => console.error('Failed to initialize WASM plugins:', err));
 
       // Initialize AI Service
       aiService.initialize().catch(console.error);
@@ -534,7 +521,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
   },
 
   setCommandPaletteOpen: (isOpen: boolean) => set({ isCommandPaletteOpen: isOpen }),
-  setShowPluginManager: (show: boolean) => set({ showPluginManager: show }),
   setShowBranchManager: (show: boolean) => set({ showBranchManager: show }),
   setShowSmartCardCreator: (show: boolean) => set({ showSmartCardCreator: show }),
 }));

@@ -17,7 +17,7 @@ export type UseStore<T> = {
   <U = T>(selector?: (state: T) => U): U;
 } & StoreApi<T>;
 
-// Idiomatic lightweight Zustand implementation using React's useSyncExternalStore
+// Minimal Zustand-style store on useSyncExternalStore
 export function createStore<T>(
   createState: (
     set: (partial: Partial<T> | ((state: T) => Partial<T>)) => void,

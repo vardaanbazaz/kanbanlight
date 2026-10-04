@@ -35,7 +35,6 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
         .map((card) => ({
           ...card,
           lastModified: new Date(card.updatedAt || card.createdAt),
-          conflicts: card.conflicts || [],
           tags: card.tags || [],
         }))
     : [];

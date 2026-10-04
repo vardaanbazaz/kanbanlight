@@ -23,7 +23,7 @@ export const CommandPalette: React.FC = () => {
     {
       id: 'create-branch',
       title: 'Manage branches',
-      description: 'Create or merge board branches',
+      description: 'Create, switch or compare board branches',
       icon: <GitBranch className="w-4 h-4" />,
       shortcut: 'Ctrl+B',
       category: 'Git',

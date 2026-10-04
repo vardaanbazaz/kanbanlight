@@ -9,7 +9,6 @@ export interface Card {
   position: number;
   createdAt: number;
   updatedAt: number;
-  conflicts: Conflict[];
   boardId?: string;
 }
 
@@ -35,16 +34,6 @@ export interface User {
   cursor: { x: number; y: number };
   color: string;
   selection?: string;
-}
-
-export interface Conflict {
-  id: string;
-  type: 'card_move' | 'card_edit' | 'column_change';
-  description: string;
-  localChange: any;
-  remoteChange: any;
-  timestamp: number;
-  userId: string;
 }
 
 export interface Event {

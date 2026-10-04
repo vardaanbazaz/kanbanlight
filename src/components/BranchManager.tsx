@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GitBranch, GitMerge, Plus, Check, Clock, User, ArrowRight, Loader2, Eye } from 'lucide-react';
+import { GitBranch, Plus, Check, Clock, User, ArrowRight, Loader2, Eye } from 'lucide-react';
 import { branchingService, BoardBranch } from '../services/BranchingService';
 import { useKanbanStore } from '../store/useKanbanStore';
 import { Tooltip } from './Tooltip';
@@ -10,7 +10,6 @@ export const BranchManager: React.FC = () => {
   const [isCreatingBranch, setIsCreatingBranch] = useState(false);
   const [newBranchName, setNewBranchName] = useState('');
   const [newBranchDescription, setNewBranchDescription] = useState('');
-  const [selectedMergeBranch, setSelectedMergeBranch] = useState<string>('');
   const [isSwitching, setIsSwitching] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -92,21 +91,6 @@ export const BranchManager: React.FC = () => {
     } finally {
       setIsSwitching(false);
     }
-  };
-
-  const handleMergeBranch = () => {
-    if (!selectedMergeBranch || !currentBranch) return;
-
-    const result = branchingService.mergeBranch(selectedMergeBranch, currentBranch.id);
-    
-    if (result.success) {
-      showToast('Merge successful!', 'success');
-      loadBranches();
-    } else {
-      showToast('Merge conflicts detected', 'error');
-    }
-    
-    setSelectedMergeBranch('');
   };
 
   const getBranchIcon = (branch: BoardBranch) => {
@@ -239,34 +223,6 @@ export const BranchManager: React.FC = () => {
             )}
           </div>
         ))}
-      </div>
-
-      {/* Merge Section */}
-      <div className="p-4 border-t border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950/60">
-        <div className="flex items-center space-x-3">
-          <GitMerge className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-          <select
-            value={selectedMergeBranch}
-            onChange={(e) => setSelectedMergeBranch(e.target.value)}
-            className="flex-1 px-2 py-1 text-sm border border-slate-300 dark:border-zinc-700 rounded bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100"
-          >
-            <option value="">Select branch to merge...</option>
-            {branches
-              .filter(b => b.id !== currentBranch?.id)
-              .map(branch => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
-          </select>
-          <button
-            onClick={handleMergeBranch}
-            disabled={!selectedMergeBranch}
-            className="px-3 py-1 text-sm bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Merge
-          </button>
-        </div>
       </div>
 
       {/* Create Branch Modal */}

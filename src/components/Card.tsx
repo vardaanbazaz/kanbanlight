@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { User, Clock, AlertTriangle, GitMerge, Tag, PlusCircle, RefreshCw, Trash2, Edit3 } from 'lucide-react';
+import { User, Clock, Tag, PlusCircle, RefreshCw, Trash2, Edit3 } from 'lucide-react';
 import { CardDetailModal } from './CardDetailModal';
 
 interface CardProps {
@@ -14,7 +14,6 @@ interface CardProps {
     tags: string[];
     columnId: string;
     lastModified: Date;
-    conflicts: any[];
   };
   diffStatus?: 'added' | 'modified' | 'deleted';
 }
@@ -88,9 +87,6 @@ export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
                 <span>- Deleted</span>
               </span>
             )}
-            {card.conflicts && card.conflicts.length > 0 && (
-              <GitMerge className="w-4 h-4 text-amber-500 flex-shrink-0" />
-            )}
           </div>
         </div>
 
@@ -109,13 +105,6 @@ export const Card: React.FC<CardProps> = ({ card, diffStatus }) => {
             <span>{priorityIcons[card.priority]}</span>
             <span className="capitalize">{card.priority}</span>
           </div>
-          
-          {card.conflicts && card.conflicts.length > 0 && (
-            <div className="flex items-center space-x-1 text-xs text-amber-600 dark:text-amber-400">
-              <AlertTriangle className="w-3 h-3" />
-              <span>{card.conflicts.length} conflicts</span>
-            </div>
-          )}
         </div>
 
         {/* Tags */}

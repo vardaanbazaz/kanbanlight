@@ -196,7 +196,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
       position: get().cards.filter((c) => c.columnId === columnId).length,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      conflicts: [],
       ...extra,
     };
 

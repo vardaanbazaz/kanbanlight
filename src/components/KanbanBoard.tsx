@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { GitBranch, Users, Zap, Terminal, Wifi, WifiOff, Database, Sun, Moon, HelpCircle } from 'lucide-react';
+import { GitBranch, Users, Plus, Terminal, Wifi, WifiOff, Database, Sun, Moon, HelpCircle } from 'lucide-react';
 import { Column } from './Column';
 import { CollaborativeCursor } from './CollaborativeCursor';
 import { ConflictResolutionModal } from './ConflictResolutionModal';
-import { AIInsightsPanel } from './AIInsightsPanel';
 import { SmartCardCreator } from './SmartCardCreator';
 import { BranchManager } from './BranchManager';
 import { Tooltip } from './Tooltip';
 import { GuidedTour } from './GuidedTour';
 import { useKanbanStore } from '../store/useKanbanStore';
 import { useTheme } from '../providers/ThemeProvider';
+import { Card } from '../types';
 
 export const KanbanBoard: React.FC = () => {
   const {
@@ -18,8 +18,6 @@ export const KanbanBoard: React.FC = () => {
     users,
     conflicts,
     connectionStatus,
-    insights,
-    isAIProcessing,
     activeBranchId,
     isDiffModeActive,
     diffTargetBranchId,
@@ -46,8 +44,9 @@ export const KanbanBoard: React.FC = () => {
     initializeStore();
   }, [initializeStore]);
 
-  const handleCreateSmartCard = async (cardData: any) => {
-    await createCard(cardData.title, cardData.columnId || 'backlog', cardData);
+  const handleCreateCard = async (cardData: Pick<Card, 'title' | 'description' | 'priority'>) => {
+    const { title, description, priority } = cardData;
+    await createCard(title, 'backlog', { description, priority });
   };
 
   return (
@@ -76,13 +75,6 @@ export const KanbanBoard: React.FC = () => {
                   <span>CLI Connected</span>
                 </div>
               </Tooltip>
-            )}
-            
-            {insights && (
-              <div className="flex items-center space-x-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 px-3 py-1 rounded-full">
-                <Zap className="w-4 h-4" />
-                <span>{insights}</span>
-              </div>
             )}
           </div>
 
@@ -152,14 +144,6 @@ export const KanbanBoard: React.FC = () => {
                 <span className="font-mono text-xs">⌘K</span>
               </button>
             </Tooltip>
-
-            {/* AI Processing Indicator */}
-            {isAIProcessing && (
-              <div className="flex items-center space-x-2 text-sm text-blue-600 dark:text-blue-400">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                <span>AI analyzing...</span>
-              </div>
-            )}
 
             {/* Header Control Icons */}
             <div className="flex items-center space-x-1 border-l border-slate-200 dark:border-zinc-800 pl-3">
@@ -240,21 +224,19 @@ export const KanbanBoard: React.FC = () => {
           </div>
         </div>
 
-        {/* AI Insights Sidebar */}
+        {/* Sidebar */}
         <div className="w-80 border-l border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 overflow-y-auto transition-colors duration-200">
           <div className="space-y-4">
-            <AIInsightsPanel />
-            
             {/* Quick Actions */}
             <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-4 transition-colors">
               <h3 className="text-sm font-medium text-slate-800 dark:text-zinc-200 mb-3">Quick Actions</h3>
               <div className="space-y-2">
                 <button
                   onClick={() => setShowSmartCardCreator(true)}
-                  className="w-full flex items-center space-x-2 px-3 py-2 text-sm bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/40 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
+                  className="w-full flex items-center space-x-2 px-3 py-2 text-sm bg-slate-50 dark:bg-zinc-800/60 text-slate-700 dark:text-zinc-200 border border-slate-200/50 dark:border-zinc-700/50 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
                 >
-                  <Zap className="w-4 h-4" />
-                  <span>Create Smart Card</span>
+                  <Plus className="w-4 h-4" />
+                  <span>New card</span>
                 </button>
                 <button
                   onClick={() => setShowBranchManager(true)}
@@ -282,10 +264,10 @@ export const KanbanBoard: React.FC = () => {
         />
       )}
 
-      {/* Smart Card Creator */}
+      {/* New Card Modal */}
       {showSmartCardCreator && (
         <SmartCardCreator
-          onCreateCard={handleCreateSmartCard}
+          onCreateCard={handleCreateCard}
           onClose={() => setShowSmartCardCreator(false)}
         />
       )}

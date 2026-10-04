@@ -2,7 +2,6 @@ import { useSyncExternalStore } from 'react';
 import { Board, Card, Column, Conflict, Event, User, BranchDiff } from '../types';
 import { databaseService } from '../services/DatabaseService';
 import { CollaborationService } from '../services/CollaborationService';
-import { aiService } from '../services/AIService';
 import { branchingService } from '../services/BranchingService';
 import { cliSyncService } from '../services/CliSyncService';
 
@@ -77,13 +76,6 @@ export interface KanbanState {
   conflicts: Conflict[];
   connectionStatus: string;
   collaborationService: CollaborationService | null;
-  
-  // AI Insights State
-  isAIProcessing: boolean;
-  insights: string | null;
-  workflowInsights: any[];
-  velocityPrediction: any | null;
-  taskSuggestions: string[];
 
   // UI Navigation State
   isCommandPaletteOpen: boolean;
@@ -110,9 +102,6 @@ export interface KanbanState {
   // Collaboration Actions
   resolveConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merge') => void;
   updateCursor: (x: number, y: number) => void;
-  
-  // AI Actions
-  generateAIInsights: () => Promise<void>;
   
   // UI Modal Actions
   setCommandPaletteOpen: (isOpen: boolean) => void;
@@ -143,11 +132,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
   conflicts: [],
   connectionStatus: 'disconnected',
   collaborationService: null,
-  isAIProcessing: false,
-  insights: null,
-  workflowInsights: [],
-  velocityPrediction: null,
-  taskSuggestions: [],
   isCommandPaletteOpen: false,
   showBranchManager: false,
   showSmartCardCreator: false,
@@ -202,9 +186,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
       };
       window.addEventListener('mousemove', handleMouseMove);
 
-      // Initialize AI Service
-      aiService.initialize().catch(console.error);
-
       // Connect to CLI Sync Bridge Server
       cliSyncService.connect();
 
@@ -226,9 +207,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
       if (!currentSnapshot) {
         await get().createSnapshot(activeBranchId);
       }
-
-      // Initial AI insights run using real loaded cards and events
-      get().generateAIInsights();
     } catch (error) {
       console.error('Failed to initialize Kanban store:', error);
     }
@@ -399,9 +377,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
 
       // 3. Sync BranchingService active branch reference
       branchingService.setActiveBranchId(targetBranchId);
-
-      // Re-trigger AI insights
-      get().generateAIInsights();
       return true;
     } catch (error) {
       console.error('Failed to switch branch:', error);
@@ -488,35 +463,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
     const colService = get().collaborationService;
     if (colService) {
       colService.updateCursor(x, y);
-    }
-  },
-
-  generateAIInsights: async () => {
-    set({ isAIProcessing: true });
-    try {
-      const currentCards = get().cards;
-      const currentEvents = get().events;
-
-      const [workflowAnalysis, prediction, suggestions] = await Promise.all([
-        aiService.generateWorkflowInsights(currentCards, currentEvents),
-        aiService.predictCompletion(currentCards, currentEvents),
-        aiService.generateTaskSuggestions({
-          recentCards: currentCards,
-          completedCards: currentCards.filter((c) => c.columnId === 'done'),
-        }),
-      ]);
-
-      set({
-        workflowInsights: workflowAnalysis,
-        velocityPrediction: prediction,
-        taskSuggestions: suggestions,
-        insights: workflowAnalysis.length > 0 ? workflowAnalysis[0].description : null,
-      });
-    } catch (error) {
-      console.error('Failed to generate AI insights:', error);
-      set({ insights: 'AI analysis temporarily unavailable' });
-    } finally {
-      set({ isAIProcessing: false });
     }
   },
 

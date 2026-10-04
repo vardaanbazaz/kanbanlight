@@ -50,7 +50,7 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose }) => {
     {
       id: 'command-palette',
       title: 'Command Palette Fast-Pass',
-      description: 'Hit ⌘K anytime to navigate fast and execute AI or Git commands.',
+      description: 'Hit ⌘K anytime to navigate fast and create cards and manage branches.',
       target: '[data-tour="command-palette-btn"]',
       icon: <Command className="w-6 h-6 text-amber-500" />,
     },

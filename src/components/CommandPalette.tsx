@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Terminal, GitBranch, Zap } from 'lucide-react';
+import { Search, Terminal, GitBranch } from 'lucide-react';
 import { useKanbanStore } from '../store/useKanbanStore';
 
 export const CommandPalette: React.FC = () => {
@@ -7,7 +7,6 @@ export const CommandPalette: React.FC = () => {
   const setIsOpen = useKanbanStore((state) => state.setCommandPaletteOpen);
   const setShowSmartCardCreator = useKanbanStore((state) => state.setShowSmartCardCreator);
   const setShowBranchManager = useKanbanStore((state) => state.setShowBranchManager);
-  const generateAIInsights = useKanbanStore((state) => state.generateAIInsights);
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -15,10 +14,9 @@ export const CommandPalette: React.FC = () => {
   const commands = [
     {
       id: 'create-card',
-      title: 'Create smart card',
-      description: 'Add a new AI-analyzed task to the board',
+      title: 'New card',
+      description: 'Add a new card to the backlog',
       icon: <Terminal className="w-4 h-4" />,
-      shortcut: 'Ctrl+N',
       category: 'Actions',
       action: () => setShowSmartCardCreator(true),
     },
@@ -30,15 +28,6 @@ export const CommandPalette: React.FC = () => {
       shortcut: 'Ctrl+B',
       category: 'Git',
       action: () => setShowBranchManager(true),
-    },
-    {
-      id: 'ai-insights',
-      title: 'Generate AI insights',
-      description: 'Analyze board for optimization suggestions',
-      icon: <Zap className="w-4 h-4" />,
-      shortcut: 'Ctrl+I',
-      category: 'AI',
-      action: () => generateAIInsights(),
     },
   ];
 

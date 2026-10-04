@@ -42,3 +42,6 @@ cli/dist
 # Vite / Temporary
 .vite
 .cache
+
+# KanbanLight CLI legacy SQLite data
+.kanban/

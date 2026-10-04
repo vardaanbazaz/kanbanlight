@@ -1,177 +1,99 @@
 # KanbanLight CLI
 
-Command-line interface for KanbanLight - Git-paradigm project management.
+Version 0.0.1. Early development.
 
-## Installation
+A small command-line tool that controls an open KanbanLight board through a local WebSocket bridge. The CLI does not store any data itself. Every command except `serve` sends a message to the bridge, and the bridge passes it on to the web app.
+
+## Setup
+
+From the `kanbanlight` repository root:
 
 ```bash
-# Install globally
-npm install -g kanban-cli
-
-# Or run locally
+cd cli
 npm install
-npm run build
-npm link
 ```
 
-## Quick Start
+Run commands from inside `cli/`:
 
 ```bash
-# Initialize a new board
-kb init --name "Sprint Planning"
-
-# Add some cards
-kb add "Implement user authentication" --priority high --assignee alice
-kb add "Write API documentation" --priority medium --column todo
-kb add "Fix login bug" --priority high --column in-progress
-
-# View board status
-kb status
-
-# List all cards
-kb list
-
-# Move a card
-kb move <card-id> done
-
-# View history
-kb log --oneline
+npx tsx src/index.ts <command>
+npx tsx src/index.ts --help
 ```
 
-## Git Integration
+The CLI's help text and messages call it `kb` (for example, "Run kb serve"). Here, `kb <command>` means `npx tsx src/index.ts <command>`.
 
-KanbanLight CLI integrates seamlessly with Git workflows:
+## Requirements for every command except `serve`
 
-```bash
-# Install Git hooks
-kb hooks --install
+- `serve` must be running in another terminal.
+- The web app must be open in a browser, so it is connected to the bridge.
 
-# Now your commits automatically create cards:
-git commit -m "feat: add user dashboard [high] @alice"
-# → Creates high-priority card assigned to Alice
+Every command except `serve` prints a warning and exits with code 1 if the bridge is not running.
 
-git commit -m "fix: resolve login timeout bug [urgent]"
-# → Creates high-priority card in in-progress column
-```
+If the bridge is running but the web app is not open, every command reports success, but nothing happens. The CLI only checks that it could reach the bridge.
 
 ## Commands
 
-### Board Management
-- `kb init [--name <name>]` - Initialize new board
-- `kb boards` - List all boards  
-- `kb checkout <board>` - Switch to different board
-
-### Card Management
-- `kb add <title>` - Create new card
-- `kb list [--column <col>] [--assignee <user>]` - List cards
-- `kb move <id> <column>` - Move card between columns
-
-### Git-like Workflow
-- `kb status` - Show board status and recent changes
-- `kb log [--oneline] [-n <count>]` - Show change history
-- `kb branch <name> [-b]` - Create board branch
-- `kb merge <branch>` - Merge branch into current board
-
-### Collaboration
-- `kb sync [--force]` - Sync with remote collaborators
-- `kb remote --add <url>` - Add remote board connection
-
-### Git Integration
-- `kb hooks --install` - Install Git hooks for auto-card creation
-- `kb hooks --uninstall` - Remove Git hooks
-- `kb hooks` - Show hooks status
-
-## Configuration
-
-KanbanLight CLI stores data in `.kanban/` directory:
-- `boards.db` - SQLite database with boards and cards
-- `config.json` - CLI configuration
-- `remotes.json` - Remote board connections
-
-## Git Hook Patterns
-
-The CLI automatically creates cards from commit messages matching these patterns:
+### `serve` (alias `start`)
 
 ```bash
-# Basic pattern: type: description
-git commit -m "feat: add user authentication"
-# → Creates medium-priority card in 'todo' column
-
-# With priority: [high|medium|low|urgent]
-git commit -m "fix: critical security bug [urgent]"
-# → Creates high-priority card in 'in-progress' column
-
-# With assignee: @username
-git commit -m "docs: update API documentation @alice"
-# → Creates card assigned to 'alice'
-
-# Combined
-git commit -m "feat: implement dashboard [high] @bob"
-# → High-priority card assigned to 'bob' in 'todo' column
+npx tsx src/index.ts serve [-p <port>]
 ```
 
-## Examples
+Starts the WebSocket bridge. The default port is 8080. The bridge forwards every message it receives to all connected clients.
 
-### Daily Workflow
+`serve` is the only command with a port option. The other CLI commands always connect to port 8080, and so does the web app, so in practice the bridge must run on 8080.
+
+The bridge has no authentication and listens on all network interfaces. Run it only on a trusted network, and stop it (`Ctrl+C`) when not in use.
+
+### `add <title>`
+
 ```bash
-# Start your day
-kb status
-
-# Add tasks from standup
-kb add "Review PR #123" --assignee alice --priority high
-kb add "Update deployment docs" --column backlog
-
-# Work on tasks
-kb move card-abc123 in-progress
-kb move card-def456 done
-
-# Check what's changed
-kb log -n 5
-
-# Sync with team
-kb sync
+npx tsx src/index.ts add "Write release notes" [-d <description>] [-p <priority>] [-a <assignee>] [-c <column>]
 ```
 
-### Sprint Planning
+Creates a card on the active branch.
+
+- `-d, --description`: card description. Default: empty.
+- `-p, --priority`: `low`, `medium` or `high`. Default: `medium`. (Here `-p` means priority, not port.)
+- `-a, --assignee`: assignee name. Default: `You`.
+- `-c, --column`: column id. One of `backlog`, `todo`, `in-progress`, `review`, `done`. Default: `backlog`.
+
+### `branch <name>`
+
 ```bash
-# Create sprint branch
-kb branch "sprint-24" --checkout
-
-# Import tasks from Git commits
-kb hooks --install
-# Now commits automatically create cards
-
-# Review sprint progress
-kb list --column in-progress
-kb status
+npx tsx src/index.ts branch <name> [-b]
 ```
 
-### Team Collaboration
+Creates a branch from the active branch. With `-b` (`--checkout`), also switches to it.
+
+### `checkout <branch>` (alias `switch`)
+
 ```bash
-# Add remote team board
-kb remote --add https://kanban.company.com/boards/team-alpha
-
-# Sync changes
-kb sync
-
-# Create feature branch
-kb branch "feature-auth" --checkout
-
-# Work and merge back
-kb add "Implement OAuth flow" --priority high
-kb checkout main
-kb merge "feature-auth"
+npx tsx src/index.ts checkout <branch>
 ```
 
-## Architecture
+Switches the web app to another branch.
 
-The CLI demonstrates several advanced patterns:
+### `compare <branch>` (alias `diff`)
 
-- **Local-first data** with SQLite storage
-- **Event sourcing** for complete audit trails  
-- **Git integration** via hooks and commit parsing
-- **Real-time sync** with WebSocket-based remotes
-- **Branching/merging** workflows like Git
-- **Plugin architecture** for extensibility
+```bash
+npx tsx src/index.ts compare <branch>
+```
 
-This showcases enterprise-level CLI design with sophisticated data modeling, real-time collaboration, and developer-friendly workflows.
+Turns on the visual diff in the web app, comparing the active branch with `<branch>`.
+
+### `exit-diff`
+
+```bash
+npx tsx src/index.ts exit-diff
+```
+
+Turns off the visual diff.
+
+## Known issue
+
+`branch`, `switch` and `compare` currently work reliably only with `main`; other names can create inconsistent branch state.
+
+## Old data
+
+Earlier versions of the CLI created a `.kanban/` directory. The current CLI does not use it, and it can be deleted.

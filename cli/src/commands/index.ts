@@ -93,7 +93,8 @@ export async function compareBranch(targetBranch: string) {
     if (sent) {
       spinner.succeed(chalk.green(`✅ Activated Visual Diff mode against "${targetBranch}" in Live UI`));
     } else {
-      spinner.fail(chalk.yellow(`⚠️ CLI Bridge server not running. Run "kb serve" to sync with Live UI.`));
+      spinner.fail(chalk.yellow(BRIDGE_DOWN_MESSAGE));
+      process.exitCode = 1;
     }
   } catch (error) {
     spinner.fail(chalk.red(`❌ Failed to compare branch: ${(error as Error).message}`));
@@ -112,7 +113,8 @@ export async function exitDiff() {
     if (sent) {
       spinner.succeed(chalk.green('✅ Exited Visual Diff mode in Live UI'));
     } else {
-      spinner.stop();
+      spinner.fail(chalk.yellow(BRIDGE_DOWN_MESSAGE));
+      process.exitCode = 1;
     }
   } catch (error) {
     spinner.fail(chalk.red(`❌ Failed to exit diff mode: ${(error as Error).message}`));

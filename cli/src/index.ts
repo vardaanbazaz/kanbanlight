@@ -16,7 +16,7 @@ const program = new Command();
 program
   .name('kb')
   .description('KanbanLight CLI - Git-paradigm project management')
-  .version('1.0.0');
+  .version('0.0.1');
 
 // Local Bridge Server command
 program

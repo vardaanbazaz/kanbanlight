@@ -1,6 +1,6 @@
 {
   "name": "kanban-cli",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Command-line interface for KanbanLight - Git-paradigm project management",
   "main": "dist/index.js",
   "bin": {

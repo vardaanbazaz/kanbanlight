@@ -79,7 +79,7 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
       </div>
 
       {/* Cards Container */}
-      <div className="flex-1 bg-white dark:bg-zinc-900/90 border-l-2 border-r-2 border-slate-200 dark:border-zinc-800 p-4 space-y-3 overflow-y-auto transition-colors">
+      <div className="flex-1 bg-white dark:bg-zinc-900/90 border-l-2 border-r-2 border-b-2 rounded-b-lg border-slate-200 dark:border-zinc-800 p-4 space-y-3 overflow-y-auto transition-colors">
         {cards.map((card: any) => {
           let diffStatus: 'added' | 'modified' | 'deleted' | undefined;
           if (isDiffModeActive) {
@@ -133,13 +133,6 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
             <span className="text-sm">Add card</span>
           </button>
         )}
-      </div>
-
-      {/* Column Footer */}
-      <div className={`rounded-b-lg border-2 border-t-0 ${colorClasses[color as keyof typeof colorClasses]} p-2 transition-colors`}>
-        <div className="text-xs text-slate-500 dark:text-zinc-400 text-center">
-          Last sync: just now
-        </div>
       </div>
     </div>
   );

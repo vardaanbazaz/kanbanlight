@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { GitBranch, Users, Plus, Terminal, Wifi, WifiOff, Database, Sun, Moon, HelpCircle } from 'lucide-react';
+import { GitBranch, Plus, Terminal, Database, Sun, Moon, HelpCircle } from 'lucide-react';
 import { Column } from './Column';
-import { CollaborativeCursor } from './CollaborativeCursor';
-import { ConflictResolutionModal } from './ConflictResolutionModal';
 import { SmartCardCreator } from './SmartCardCreator';
 import { BranchManager } from './BranchManager';
 import { Tooltip } from './Tooltip';
@@ -15,9 +13,6 @@ export const KanbanBoard: React.FC = () => {
   const {
     columns,
     events,
-    users,
-    conflicts,
-    connectionStatus,
     activeBranchId,
     isDiffModeActive,
     diffTargetBranchId,
@@ -26,7 +21,6 @@ export const KanbanBoard: React.FC = () => {
     showBranchManager,
     showSmartCardCreator,
     initializeStore,
-    resolveConflict,
     exitDiffMode,
     setCommandPaletteOpen,
     setShowBranchManager,
@@ -79,34 +73,6 @@ export const KanbanBoard: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Collaboration Status */}
-            <div className="flex items-center space-x-2">
-              <Users className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
-              <span className="text-sm text-slate-600 dark:text-zinc-300">{users.length} online</span>
-              
-              {/* Connection Status */}
-              <div className="flex items-center space-x-1">
-                {connectionStatus === 'connected' ? (
-                  <span title="Connected"><Wifi className="w-4 h-4 text-green-500" /></span>
-                ) : (
-                  <span title="Offline"><WifiOff className="w-4 h-4 text-amber-500" /></span>
-                )}
-                <span className="text-xs text-slate-500 dark:text-zinc-400 capitalize">{connectionStatus}</span>
-              </div>
-              
-              <div className="flex -space-x-1">
-                {users.slice(0, 3).map((user) => (
-                  <div
-                    key={user.id}
-                    className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 border-2 border-white dark:border-zinc-900 flex items-center justify-center text-xs text-white font-medium shadow-sm"
-                    title={user.name}
-                  >
-                    {user.name[0]}
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Help / Guided Tour Button */}
             <Tooltip content="Product Tour & Help" position="bottom">
               <button
@@ -250,19 +216,6 @@ export const KanbanBoard: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Collaborative Cursors */}
-      {users.map((user) => (
-        <CollaborativeCursor key={user.id} user={user} />
-      ))}
-
-      {/* Conflict Resolution */}
-      {conflicts.length > 0 && (
-        <ConflictResolutionModal
-          conflicts={conflicts}
-          onResolve={resolveConflict}
-        />
-      )}
 
       {/* New Card Modal */}
       {showSmartCardCreator && (

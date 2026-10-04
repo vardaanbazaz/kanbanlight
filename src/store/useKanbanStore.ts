@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from 'react';
-import { Board, Card, Column, Conflict, Event, User, BranchDiff } from '../types';
+import { Board, Card, Column, Event, User, BranchDiff } from '../types';
 import { databaseService } from '../services/DatabaseService';
-import { CollaborationService } from '../services/CollaborationService';
 import { branchingService } from '../services/BranchingService';
 import { cliSyncService } from '../services/CliSyncService';
 
@@ -70,12 +69,8 @@ export interface KanbanState {
   // CLI Bridge State
   isCliConnected: boolean;
 
-  // Collaboration & Presence State
-  users: User[];
+  // Local user
   currentUser: User | null;
-  conflicts: Conflict[];
-  connectionStatus: string;
-  collaborationService: CollaborationService | null;
 
   // UI Navigation State
   isCommandPaletteOpen: boolean;
@@ -99,10 +94,6 @@ export interface KanbanState {
   startBranchDiff: (targetBranchId: string) => Promise<boolean>;
   exitDiffMode: () => void;
 
-  // Collaboration Actions
-  resolveConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merge') => void;
-  updateCursor: (x: number, y: number) => void;
-  
   // UI Modal Actions
   setCommandPaletteOpen: (isOpen: boolean) => void;
   setShowBranchManager: (show: boolean) => void;
@@ -127,11 +118,7 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
   diffTargetBranchId: null,
   branchDiff: null,
   isCliConnected: false,
-  users: [],
   currentUser: null,
-  conflicts: [],
-  connectionStatus: 'disconnected',
-  collaborationService: null,
   isCommandPaletteOpen: false,
   showBranchManager: false,
   showSmartCardCreator: false,
@@ -164,27 +151,13 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
       const loadedCards = await databaseService.getCardsByBoard(activeBoard.id);
       const loadedEvents = await databaseService.getEventsByBoard(activeBoard.id);
 
-      // Create current user
+      // Local user
       const currentUser: User = {
         id: 'user-' + Math.random().toString(36).substr(2, 9),
         name: 'You',
         cursor: { x: 0, y: 0 },
         color: '#3B82F6',
       };
-
-      // Initialize Collaboration Service
-      const colService = new CollaborationService(activeBoard.id, currentUser);
-      colService.on('users-changed', (users: User[]) => set({ users }));
-      colService.on('connection-status', (status: string) => set({ connectionStatus: status }));
-      colService.on('conflict-detected', (conflict: Conflict) =>
-        set((state) => ({ conflicts: [...state.conflicts, conflict] }))
-      );
-
-      // Attach mousemove handler safely with active service reference
-      const handleMouseMove = (e: MouseEvent) => {
-        colService.updateCursor(e.clientX, e.clientY);
-      };
-      window.addEventListener('mousemove', handleMouseMove);
 
       // Connect to CLI Sync Bridge Server
       cliSyncService.connect();
@@ -196,8 +169,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
         cards: loadedCards,
         events: loadedEvents,
         currentUser,
-        collaborationService: colService,
-        connectionStatus: colService.getConnectionStatus(),
         activeBranchId,
         isInitialized: true,
       });
@@ -447,23 +418,6 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
       diffTargetBranchId: null,
       branchDiff: null,
     });
-  },
-
-  resolveConflict: (conflictId: string, resolution: 'local' | 'remote' | 'merge') => {
-    const colService = get().collaborationService;
-    if (colService) {
-      colService.resolveConflict(conflictId, resolution);
-    }
-    set((state) => ({
-      conflicts: state.conflicts.filter((c) => c.id !== conflictId),
-    }));
-  },
-
-  updateCursor: (x: number, y: number) => {
-    const colService = get().collaborationService;
-    if (colService) {
-      colService.updateCursor(x, y);
-    }
   },
 
   setCommandPaletteOpen: (isOpen: boolean) => set({ isCommandPaletteOpen: isOpen }),

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Security
+
+- Bumped Vite to 5.4.21 for development-server advisories. Affects `npm run dev` only.
+
 ## 0.0.1 — 2026-10-04
 
 Changes since the git tag `pre-audit-2026-09`. The parked code is preserved under that tag.
@@ -16,5 +22,8 @@ Changes since the git tag `pre-audit-2026-09`. The parked code is preserved unde
 ### Fixed
 
 - CLI `add`, `branch`, `checkout` / `switch`, `compare` / `diff` and `exit-diff` print a warning and exit with code 1 when the bridge is not running. Before, `add`, `branch` and `checkout` / `switch` reported success, and `compare` / `diff` and `exit-diff` exited with code 0.
-- The production build no longer bundles the unused ML runtime (`@xenova/transformers` with onnxruntime-web, about 888 KB minified).
-- Removed dependencies that only parked code used, or that nothing used, including `zustand`, `uuid` and `ws` from the web app, and `sqlite3`, `inquirer`, `table`, `date-fns` and `uuid` from the CLI. The CLI no longer needs the native `sqlite3` build to install.
+- The production build no longer bundles the unused ML runtime (`@xenova/transformers` with onnxruntime-web).
+
+### Removed
+
+- Dependencies that only parked code used, or that nothing used, including `zustand`, `uuid` and `ws` from the web app, and `sqlite3`, `inquirer`, `table`, `date-fns` and `uuid` from the CLI. The CLI no longer needs the native `sqlite3` build to install.

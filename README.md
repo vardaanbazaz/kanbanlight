@@ -1,12 +1,10 @@
 # KanbanLight
 
-Version 0.0.1. KanbanLight is in early development.
+A Kanban board in the browser that borrows a few ideas from Git: create branches of a board, switch between them, and compare the current branch with another one. Board data is stored in your browser; there is no backend.
 
-Live demo: https://kanbanlight.vercel.app
+Version 0.0.1, an early build. Live demo: https://kanbanlight.vercel.app
 
-The CLI bridge requires the local setup below.
-
-KanbanLight is a Kanban board that runs in the browser and borrows a few ideas from Git. You can create branches of a board, switch between them, and compare the active branch with another branch in a visual diff. All data stays in the browser. A small Node.js CLI can send commands to the open board over a local WebSocket bridge.
+An optional Node.js CLI can send commands to an open board over a local WebSocket bridge. It needs the local setup below and is meant for the web app running locally.
 
 ---
 
@@ -14,16 +12,16 @@ KanbanLight is a Kanban board that runs in the browser and borrows a few ideas f
 
 - **Branches:** create a branch of the board and switch between branches.
 - **Per-branch snapshots:** each branch keeps its own snapshot of cards, columns and events, which is loaded when you switch to it.
-- **Visual diff:** compare the active branch with another branch. Cards are marked as:
-  - **Added:** green ring and tint.
-  - **Modified:** amber ring and tint.
-  - **Deleted:** red dashed ring, shown faded in their original columns.
+- **Compare:** compare the current branch with another branch. Cards are marked as:
+  - **Added** (green ring and tint): on the current branch, not in the other branch's last saved state.
+  - **Modified** (amber ring and tint): on both, with different content.
+  - **Deleted** (red dashed ring, shown faded in its original column): only in the other branch's last saved state.
 
-  The comparison uses the other branch's last saved snapshot, so changes made on the active branch since that branch's snapshot also show up as differences.
+  The comparison uses the other branch's last saved state, which is saved when that branch was created or last switched away from. It does not update while it is open, and it stays on when you switch branches, so turn it off before switching. The labels describe differences relative to the current branch, not which branch made the change: a card deleted on the other branch shows as Added here.
 - **Markdown card descriptions**, rendered with `react-markdown` and `remark-gfm`.
 - **Command palette**, opened with `Ctrl+K` (`Cmd+K` on macOS).
 - **Light and dark mode.** The board follows the system setting until you use the toggle.
-- **Local storage:** board data is stored in the browser's IndexedDB. The list of branches is stored in `localStorage`. Nothing is sent to a server.
+- **Local storage:** board data is stored in the browser's IndexedDB. The branch list, including a copy of the board from when each branch was created, is stored in `localStorage`. Your board is stored only in this browser; KanbanLight has no server and collects nothing (the host keeps standard request logs). Clearing this site's data deletes everything. Images linked in card descriptions are loaded from the sites that host them. While the CLI bridge runs, it sends card text to every program connected to it.
 - **CLI bridge commands:** `serve`, `add`, `branch`, `checkout` / `switch`, `compare` / `diff` and `exit-diff`. See [cli/README.md](cli/README.md).
 
 ---
@@ -34,7 +32,7 @@ KanbanLight is a Kanban board that runs in the browser and borrows a few ideas f
 graph TD
     subgraph Browser Frontend
         UI[React UI / KanbanBoard]
-        Store[useKanbanStore - small custom store on useSyncExternalStore, includes branch diff]
+        Store[useKanbanStore - small custom store on useSyncExternalStore, includes branch comparison]
         CliClient[CliSyncService - WebSocket client]
     end
 
@@ -42,10 +40,11 @@ graph TD
         IDB[(DatabaseService - IndexedDB)]
         IDB_Cards[Boards, Cards and Events stores]
         IDB_Snapshots[Branch Snapshots store]
+        LS[(localStorage - branch list and fork-point copies)]
     end
 
     subgraph Local Machine
-        WsBridge[CLI bridge server - port 8080, all interfaces]
+        WsBridge[CLI bridge - port 8080, all interfaces]
         CliTool[CLI - Commander.js]
     end
 
@@ -53,6 +52,7 @@ graph TD
     Store <--> IDB
     IDB <--> IDB_Cards
     IDB <--> IDB_Snapshots
+    Store <--> LS
     CliTool -->|JSON messages| WsBridge
     WsBridge -->|ws://localhost:8080| CliClient
     CliClient -->|State actions| Store
@@ -72,7 +72,7 @@ graph TD
 
 ## Setup
 
-Requires Node.js and npm. Tested with Node.js 22.
+Requires Node.js and npm. Developed with Node.js 22.
 
 ### Terminal 1: web app
 
@@ -93,7 +93,9 @@ npm run build
 
 ### Terminal 2: CLI bridge (optional)
 
-Read the security note under "Known issues" first. Then, from the `kanbanlight` directory:
+Read the security note under "Known issues" first. The CLI is meant for the web app running locally: the hosted demo also tries to reach a bridge on `localhost:8080`, and browsers that check local-network access, such as Chrome, block that unless you allow it.
+
+Then, from the `kanbanlight` directory:
 
 ```bash
 cd cli
@@ -110,6 +112,7 @@ From the `kanbanlight/cli` directory, with the bridge running and the web app op
 ```bash
 npx tsx src/index.ts --help
 npx tsx src/index.ts add "Write release notes" -p high -c backlog
+# after creating a branch and switching to it in the web app
 npx tsx src/index.ts compare main
 npx tsx src/index.ts exit-diff
 ```
@@ -120,20 +123,28 @@ The CLI's help text and messages refer to it as `kb`. In this setup, `kb <comman
 
 ## Known issues
 
-- CLI branch commands (`branch`, `switch`, `compare`) currently work reliably only with `main`; other names can create inconsistent branch state.
-- The CLI bridge has no authentication and listens on all network interfaces. Run `serve` only on a trusted network, and stop it when not in use.
-- The guided tour shown on first visit has a rendering bug that floods the browser console with warnings.
+1. CLI branch commands: only `main` works with `checkout`/`switch` and `compare`, and `branch -b` must not be used; other names create a broken branch, and after a reload the board can save that branch's cards as main's. Create and switch branches in the web app.
+2. Branching stops on large boards: the branch list can outgrow the browser's localStorage limit; after that no new branch can be created, and branches cannot be deleted yet.
+3. A malformed command sent through the bridge can leave the page blank on every load; recovery currently means clearing the site's data, which deletes the board.
+4. Two tabs share one working copy: edits in one tab can land on another tab's branch, and every CLI command is applied once per open tab.
+5. The bridge has no authentication, listens on all network interfaces and sends card text to every program connected to it. Run `serve` only on a trusted network and stop it when not in use.
+6. The first-visit guided tour lags (close it with Esc or ×); the layout is desktop-only; export saves only the current branch's event log and there is no import, so browser storage is the only copy of a board.
 
 ---
 
 ## Roadmap
 
-- **Branch merging with conflict resolution:** in progress. The earlier merge UI did not apply changes and has been removed while merging is rebuilt.
-- **WASM plugins:** prototype parked. Upload, storage and loading of `.wasm` files worked, but plugins could not affect the board.
-- **Real-time collaboration:** prototype parked. A Yjs document was set up locally, but there was no sync server and board data was never shared.
-- **CLI standalone mode:** prototype parked. The CLI kept its own SQLite boards, which never synced with the browser.
+Planned, in no fixed order:
 
-The code for the parked prototypes is preserved under the git tag `pre-audit-2026-09`.
+- Reliable branch commands from the CLI, and a bridge that only accepts paired clients.
+- A redesigned interface, with a sample board on first visit.
+- Drag-and-drop and card ordering.
+- Merging branches, and deleting and renaming branches.
+- Full export and import of a board.
+
+## Parked prototypes
+
+Earlier prototypes of branch merging, WASM plugins, real-time collaboration and a standalone CLI mode were removed in 0.0.1 because they did not work end to end (see CHANGELOG). Their code is preserved under the git tag `pre-audit-2026-09`.
 
 ---
 

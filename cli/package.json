@@ -17,6 +17,9 @@
   "keywords": ["kanban", "cli", "websocket", "kanbanlight"],
   "author": "Vardaan Bajaj",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.12"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vardaanbazaz/kanbanlight.git",

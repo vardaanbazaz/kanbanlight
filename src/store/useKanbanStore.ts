@@ -131,7 +131,7 @@ export const useKanbanStore = createStore<KanbanState>((set, get) => ({
       await databaseService.initialize();
 
       // Load boards
-      let boards = await databaseService.getAllBoards();
+      const boards = await databaseService.getAllBoards();
       let activeBoard: Board;
 
       if (boards.length === 0) {

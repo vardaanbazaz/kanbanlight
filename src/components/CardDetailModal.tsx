@@ -3,9 +3,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { X, Edit3, Eye, Columns, Save, Trash2, Tag, User, Plus } from 'lucide-react';
 import { useKanbanStore } from '../store/useKanbanStore';
+import type { Card } from '../types';
 
 interface CardDetailModalProps {
-  card: any;
+  card: Pick<Card, 'id' | 'title' | 'description' | 'priority' | 'assignee' | 'tags' | 'columnId'>;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -104,7 +105,7 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, isOpen, 
             <label className="block font-medium text-slate-500 dark:text-zinc-400 mb-1">Priority</label>
             <select
               value={priority}
-              onChange={(e) => setPriority(e.target.value as any)}
+              onChange={(e) => setPriority(e.target.value as Card['priority'])}
               className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-100 rounded px-2 py-1 outline-none"
             >
               <option value="low">Low Priority</option>
@@ -121,7 +122,7 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, isOpen, 
               onChange={(e) => setColumnId(e.target.value)}
               className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-100 rounded px-2 py-1 outline-none"
             >
-              {columns.map((col: any) => (
+              {columns.map((col) => (
                 <option key={col.id} value={col.id}>
                   {col.title}
                 </option>

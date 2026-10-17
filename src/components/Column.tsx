@@ -79,7 +79,7 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
 
       {/* Cards Container */}
       <div className="flex-1 bg-white dark:bg-zinc-900/90 border-l-2 border-r-2 border-b-2 rounded-b-lg border-slate-200 dark:border-zinc-800 p-4 space-y-3 overflow-y-auto transition-colors">
-        {cards.map((card: any) => {
+        {cards.map((card) => {
           let diffStatus: 'added' | 'modified' | 'deleted' | undefined;
           if (isDiffModeActive) {
             if (addedIds.has(card.id)) diffStatus = 'added';
@@ -89,7 +89,7 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
         })}
 
         {/* Deleted Cards (Ghosted) */}
-        {deletedCardsInColumn.map((card: any) => (
+        {deletedCardsInColumn.map((card) => (
           <Card key={`deleted-${card.id}`} card={card} diffStatus="deleted" />
         ))}
 

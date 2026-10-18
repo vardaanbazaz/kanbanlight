@@ -7,6 +7,7 @@ import { Tooltip } from './Tooltip';
 import { GuidedTour } from './GuidedTour';
 import { useKanbanStore } from '../store/useKanbanStore';
 import { useTheme } from '../providers/ThemeProvider';
+import { branchingService } from '../services/BranchingService';
 import { Card } from '../types';
 
 export const KanbanBoard: React.FC = () => {
@@ -29,6 +30,9 @@ export const KanbanBoard: React.FC = () => {
   } = useKanbanStore();
 
   const { resolvedTheme, toggleTheme } = useTheme();
+
+  const branchName = (id: string | null) =>
+    branchingService.getBranches().find((branch) => branch.id === id)?.name ?? id;
 
   const [isTourOpen, setIsTourOpen] = useState(() => {
     return localStorage.getItem('kanbanlight-tour-completed') !== 'true';
@@ -54,9 +58,9 @@ export const KanbanBoard: React.FC = () => {
               <h1 className="text-xl font-semibold text-slate-900 dark:text-zinc-100">KanbanLight</h1>
               
               {/* Branch Badge with Tooltip & Tour target */}
-              <Tooltip content="Your current isolated workspace. Switch branches to time-travel." position="bottom">
+              <Tooltip content="The branch you're on." position="bottom">
                 <span data-tour="branch-badge" className="text-xs bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 px-2.5 py-1 rounded-full font-mono cursor-help transition-colors">
-                  {activeBranchId}@{events.length}
+                  {branchName(activeBranchId)}
                 </span>
               </Tooltip>
             </div>
@@ -103,6 +107,7 @@ export const KanbanBoard: React.FC = () => {
             <Tooltip content="Quick command palette (⌘K)" position="bottom">
               <button
                 data-tour="command-palette-btn"
+                aria-label="Command palette"
                 onClick={() => setCommandPaletteOpen(true)}
                 className="flex items-center space-x-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg text-sm text-slate-600 dark:text-zinc-300 transition-colors border border-transparent dark:border-zinc-700/50"
               >
@@ -116,6 +121,7 @@ export const KanbanBoard: React.FC = () => {
               <Tooltip content="Branch Manager" position="bottom">
                 <button
                   data-tour="branch-manager-btn"
+                  aria-label="Branch Manager"
                   onClick={() => setShowBranchManager(true)}
                   className="p-2 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-slate-500 dark:text-zinc-400"
                 >
@@ -134,6 +140,7 @@ export const KanbanBoard: React.FC = () => {
                     link.download = `kanban-export-${Date.now()}.json`;
                     link.click();
                   }}
+                  aria-label="Export event log"
                   className="p-2 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-slate-500 dark:text-zinc-400"
                 >
                   <Database className="w-4 h-4" />
@@ -150,9 +157,9 @@ export const KanbanBoard: React.FC = () => {
           <div className="flex items-center space-x-3 text-sm">
             <div className="flex items-center space-x-2 bg-indigo-800/80 px-3 py-1 rounded-md border border-indigo-600 font-mono text-xs">
               <GitBranch className="w-3.5 h-3.5 text-blue-300" />
-              <span className="font-semibold text-blue-200">{activeBranchId}</span>
+              <span className="font-semibold text-blue-200">{branchName(activeBranchId)}</span>
               <span className="text-slate-400">vs</span>
-              <span className="font-semibold text-purple-200">{diffTargetBranchId}</span>
+              <span className="font-semibold text-purple-200">{branchName(diffTargetBranchId)}</span>
             </div>
             <span className="text-slate-300 font-medium">Visual Diff Active:</span>
             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">

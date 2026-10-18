@@ -14,6 +14,9 @@
 
 - CLI: `switch` is the main command name and `checkout` an alias. `add` rejects unknown priorities and columns, empty titles and extra words; `switch`, `branch` and `compare` reject blank names; `serve -p` rejects anything but a port from 1 to 65535. Rejected commands exit with code 1 and send nothing.
 - CLI success lines say the command was sent to the bridge; the board does not confirm commands yet. No emoji in CLI output.
+- CLI help text for the CLI itself, `serve`, `compare` and `exit-diff` describes what each one does.
+- The header shows the current branch's name instead of its id and an event count, and the compare banner shows both branch names. The unused buttons in the column headers are gone, the header buttons have accessible names, and the command palette no longer lists a `Ctrl+B` shortcut that did nothing.
+- The page has a new title, a description, link-preview text and a favicon.
 
 ### Fixed
 
@@ -22,6 +25,7 @@
 - A branch list that cannot be read is no longer replaced with a new, empty one; the recovery screen opens instead. A current-branch pointer to a missing branch, left by the CLI branch bug, is kept as a branch named `recovered`, so switching to `main` no longer overwrites it.
 - A board whose stored data cannot be displayed now shows a recovery screen with a download of everything the app has stored in this browser, instead of a blank page.
 - CLI `switch` and `compare` accept a branch's name. A name the board does not know, a name shared by several branches, or a blank name is ignored instead of creating a broken branch.
+- The guided tour no longer lags. Its text no longer mentions time travel, board layouts or controlling the board entirely from the command line.
 
 ## 0.0.1 — 2026-10-04
 

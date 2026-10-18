@@ -22,14 +22,14 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose }) => {
     {
       id: 'welcome',
       title: 'Welcome to KanbanLight!',
-      description: "This isn't just a Kanban board; it's a time-traveling, Git-paradigm project manager.",
+      description: "A Kanban board with Git-style branches: branch the whole board, try changes and compare them with main.",
       target: null,
       icon: <Sparkles className="w-6 h-6 text-purple-500" />,
     },
     {
       id: 'branching',
       title: 'Branching Workspaces',
-      description: 'Create branches to experiment with board layouts without breaking your main state.',
+      description: 'Create a branch to try changes to your cards without touching main.',
       target: '[data-tour="branch-badge"]',
       icon: <GitBranch className="w-6 h-6 text-blue-500" />,
     },
@@ -43,35 +43,37 @@ export const GuidedTour: React.FC<GuidedTourProps> = ({ isOpen, onClose }) => {
     {
       id: 'cli',
       title: 'Developer CLI Bridge',
-      description: "Boot up 'kb serve' in your terminal to control this browser UI entirely via the command line.",
+      description: 'When you run the board locally with npm run dev, the optional CLI can add cards and create, switch and compare branches from a terminal. See cli/README.md.',
       target: '[data-tour="cli-badge"]',
       icon: <Terminal className="w-6 h-6 text-emerald-500" />,
     },
     {
       id: 'command-palette',
       title: 'Command Palette Fast-Pass',
-      description: 'Hit ⌘K anytime to navigate fast and create cards and manage branches.',
+      description: 'Press Ctrl+K (⌘K on Mac) anytime to navigate fast and create cards and manage branches.',
       target: '[data-tour="command-palette-btn"]',
       icon: <Command className="w-6 h-6 text-amber-500" />,
     },
   ];
 
   const currentStep = steps[currentStepIndex];
+  // The steps array is rebuilt every render, so depend on the target string, not the step object.
+  const target = currentStep?.target ?? null;
 
   const updateTargetPosition = useCallback(() => {
-    if (!isOpen || !currentStep || !currentStep.target) {
+    if (!isOpen || !target) {
       setTargetRect(null);
       return;
     }
 
-    const el = document.querySelector(currentStep.target);
+    const el = document.querySelector(target);
     if (el) {
       const rect = el.getBoundingClientRect();
       setTargetRect(rect);
     } else {
       setTargetRect(null);
     }
-  }, [isOpen, currentStep]);
+  }, [isOpen, target]);
 
   useEffect(() => {
     if (isOpen) {

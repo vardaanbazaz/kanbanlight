@@ -1,6 +1,6 @@
 # Execution flow
 
-How execution moves through KanbanLight 0.0.1. This describes the current code; it will be replaced when the data layer is rebuilt. There are two programs. One is the browser app in `src/`. The other is the optional `kb` CLI in `cli/`, which talks to the app over a local WebSocket bridge.
+How execution moves through KanbanLight 0.0.2. This describes the current code; it will be replaced when the data layer is rebuilt. There are two programs. One is the browser app in `src/`. The other is the optional `kb` CLI in `cli/`, which talks to the app over a local WebSocket bridge.
 
 ## Entry points
 
@@ -51,6 +51,7 @@ The app has no routes. It is a single page. There are no background jobs except 
 | Export | header Database button in `KanbanBoard.tsx` | inline handler serializes the store's `events` array only (not cards, branches or snapshots) → Blob download `kanban-export-<ts>.json`. `DatabaseService:exportData` exists but nothing calls it |
 | Command palette | Ctrl/Cmd+K (`CommandPalette.tsx`) | `setShowSmartCardCreator` / `setShowBranchManager` / other actions |
 | Theme | header toggle | `ThemeProvider.tsx:toggleTheme` → `localStorage` |
+| Branch names in the header badge and compare banner | `KanbanBoard.tsx:branchName` | `BranchingService:getBranches`, falling back to the id |
 
 Storage split: branches and the active branch id live in `localStorage` (`BranchingService`). Cards, events, boards and per-branch snapshots live in IndexedDB (`DatabaseService`).
 
@@ -82,6 +83,7 @@ flowchart TD
   KB --> Col[Column.tsx] --> Card[Card.tsx] --> Modal[CardDetailModal.tsx]
   Modal --> store[useKanbanStore actions] --> DB
   KB --> BM[BranchManager.tsx] --> BS[BranchingService] --> LS[(localStorage)]
+  KB -->|branch names| BS
   BS --> store
   BM -->|compare| diff[useKanbanStore:startBranchDiff]
   kb[kb CLI cli/src/index.ts] --> cmds[cli/src/commands] --> BC[BridgeClient:sendToBridge]

@@ -20,14 +20,14 @@ npx tsx src/index.ts <command>
 npx tsx src/index.ts --help
 ```
 
-The CLI's help text and messages call it `kb` (for example, "Run kb serve"). Here, `kb <command>` means `npx tsx src/index.ts <command>`.
+The CLI's help text and messages call it `kb` (for example, "Start it in another terminal with: kb serve"). Here, `kb <command>` means `npx tsx src/index.ts <command>`.
 
 ## Requirements for every command except `serve`
 
 - `serve` must be running in another terminal.
 - The web app must be open in a browser, so it is connected to the bridge.
 
-Use the web app from `npm run dev` (see the main README). The hosted demo is blocked from reaching the bridge in browsers that check local-network access, unless you allow it.
+Use the web app from `npm run dev` or `npm run preview` (see the main README). The hosted demo never connects to the bridge.
 
 Every command except `serve` prints `Bridge not running on 127.0.0.1:8080. Start it in another terminal with: kb serve` and exits with code 1 if the bridge is not running.
 
@@ -78,7 +78,7 @@ Creates a branch from the current branch, and the web app switches to it straigh
 npx tsx src/index.ts switch <branch>
 ```
 
-Switches the web app to another branch. Only `main` works for now (see Known issues).
+Switches the web app to another branch, given its name. A name the board does not know, or one shared by several branches, is ignored and nothing changes; the CLI still reports the command as sent.
 
 ### `compare <branch>` (alias `diff`)
 
@@ -86,7 +86,7 @@ Switches the web app to another branch. Only `main` works for now (see Known iss
 npx tsx src/index.ts compare <branch>
 ```
 
-Turns on the comparison in the web app, comparing the current branch with `<branch>`. Only `main` works for now; any other name shows every card as Added.
+Turns on the comparison in the web app, comparing the current branch with `<branch>`. Names are handled as for `switch`: an unknown or shared name is ignored.
 
 ### `exit-diff`
 
@@ -98,7 +98,7 @@ Turns off the comparison.
 
 ## Known issues
 
-- CLI branch commands: only `main` works with `checkout`/`switch` and `compare`, and `branch -b` must not be used; other names create a broken branch, and after a reload the board can save that branch's cards as main's. Create and switch branches in the web app.
+- The CLI cannot tell whether the board applied a command; it reports only that the bridge received it. Boards where `main` was already overwritten by an earlier CLI branch command are not repaired.
 - The bridge has no authentication: any program on this computer can connect to it, and it sends card text to every connected program. Stop it when not in use.
 
 ## Old data

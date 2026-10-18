@@ -15,7 +15,7 @@ const program = new Command();
 
 program
   .name('kb')
-  .description('KanbanLight CLI - Git-paradigm project management')
+  .description('Control an open KanbanLight board from the terminal')
   .version('0.0.1')
   .allowExcessArguments(false);
 
@@ -35,7 +35,7 @@ function required(value: string, what: string): string {
 program
   .command('serve')
   .alias('start')
-  .description('Start local WebSocket bridge server to sync with live React UI')
+  .description('Start the bridge that relays commands to open KanbanLight tabs (port 8080)')
   .option('-p, --port <port>', 'Server port', parsePort, 8080)
   .action((options: { port: number }) => {
     startCliServer(options.port);
@@ -73,12 +73,12 @@ program
 program
   .command('compare <branch>')
   .alias('diff')
-  .description('Compare active branch against target branch in Live UI')
+  .description('Compare the current branch with <branch> on the board')
   .action((branch: string) => compareBranch(required(branch, 'branch name')));
 
 program
   .command('exit-diff')
-  .description('Exit Visual Diff mode in Live UI')
+  .description('Stop comparing')
   .action(exitDiff);
 
 // Error handling

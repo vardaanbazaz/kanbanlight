@@ -21,8 +21,8 @@ An optional Node.js CLI can send commands to an open board over a local WebSocke
 - **Markdown card descriptions**, rendered with `react-markdown` and `remark-gfm`.
 - **Command palette**, opened with `Ctrl+K` (`Cmd+K` on macOS).
 - **Light and dark mode.** The board follows the system setting until you use the toggle.
-- **Local storage:** board data is stored in the browser's IndexedDB. The branch list, including a copy of the board from when each branch was created, is stored in `localStorage`. Your board is stored only in this browser; KanbanLight has no server and collects nothing (the host keeps standard request logs). Clearing this site's data deletes everything. Images linked in card descriptions are loaded from the sites that host them. While the CLI bridge runs, it sends card text to every program connected to it.
-- **CLI bridge commands:** `serve`, `add`, `branch`, `checkout` / `switch`, `compare` / `diff` and `exit-diff`. See [cli/README.md](cli/README.md).
+- **Local storage:** board data is stored in the browser's IndexedDB. The branch list, including a copy of the board from when each branch was created, is stored in `localStorage`. Your board is stored only in this browser; KanbanLight has no server and collects nothing (the host keeps standard request logs). Clearing this site's data deletes everything. On the hosted site, images from other sites in card descriptions do not load; when you run the app yourself, they load from the sites that host them. While the CLI bridge runs, it sends card text to every program connected to it.
+- **CLI bridge commands:** `serve`, `add`, `branch`, `switch` / `checkout`, `compare` / `diff` and `exit-diff`. See [cli/README.md](cli/README.md).
 
 ---
 
@@ -44,7 +44,7 @@ graph TD
     end
 
     subgraph Local Machine
-        WsBridge[CLI bridge - port 8080, all interfaces]
+        WsBridge[CLI bridge - 127.0.0.1:8080 only]
         CliTool[CLI - Commander.js]
     end
 
@@ -54,7 +54,7 @@ graph TD
     IDB <--> IDB_Snapshots
     Store <--> LS
     CliTool -->|JSON messages| WsBridge
-    WsBridge -->|ws://localhost:8080| CliClient
+    WsBridge -->|ws://127.0.0.1:8080| CliClient
     CliClient -->|State actions| Store
 ```
 
@@ -93,7 +93,7 @@ npm run build
 
 ### Terminal 2: CLI bridge (optional)
 
-Read the security note under "Known issues" first. The CLI is meant for the web app running locally: the hosted demo also tries to reach a bridge on `localhost:8080`, and browsers that check local-network access, such as Chrome, block that unless you allow it.
+Read the security note under "Known issues" first. The CLI works only with the web app served by `npm run dev` (or `npm run preview`) on its default port; the hosted demo never connects to a bridge.
 
 Then, from the `kanbanlight` directory:
 
@@ -112,9 +112,10 @@ From the `kanbanlight/cli` directory, with the bridge running and the web app op
 ```bash
 npx tsx src/index.ts --help
 npx tsx src/index.ts add "Write release notes" -p high -c backlog
-# after creating a branch and switching to it in the web app
+npx tsx src/index.ts branch idea
 npx tsx src/index.ts compare main
 npx tsx src/index.ts exit-diff
+npx tsx src/index.ts switch main
 ```
 
 The CLI's help text and messages refer to it as `kb`. In this setup, `kb <command>` means `npx tsx src/index.ts <command>` run from `cli/`.
@@ -123,12 +124,12 @@ The CLI's help text and messages refer to it as `kb`. In this setup, `kb <comman
 
 ## Known issues
 
-1. CLI branch commands: only `main` works with `checkout`/`switch` and `compare`, and `branch -b` must not be used; other names create a broken branch, and after a reload the board can save that branch's cards as main's. Create and switch branches in the web app.
-2. Branching stops on large boards: the branch list can outgrow the browser's localStorage limit; after that no new branch can be created, and branches cannot be deleted yet.
-3. A malformed command sent through the bridge can leave the page blank on every load; recovery currently means clearing the site's data, which deletes the board.
-4. Two tabs share one working copy: edits in one tab can land on another tab's branch, and every CLI command is applied once per open tab.
-5. The bridge has no authentication, listens on all network interfaces and sends card text to every program connected to it. Run `serve` only on a trusted network and stop it when not in use.
-6. The first-visit guided tour lags (close it with Esc or ×); the layout is desktop-only; export saves only the current branch's event log and there is no import, so browser storage is the only copy of a board.
+1. Branching stops on large boards: the branch list can outgrow the browser's localStorage limit; after that no new branch can be created, and branches cannot be deleted yet.
+2. Two tabs share one working copy: edits in one tab can land on another tab's branch, and every CLI command is applied once per open tab.
+3. The CLI cannot tell whether the board applied a command; it reports only that the bridge received it. Boards where `main` was already overwritten by an earlier CLI branch command are not repaired.
+4. The bridge has no authentication: any program on this computer can connect to it, and it sends card text to every connected program. Stop it (`Ctrl+C`) when not in use.
+5. If a board cannot be displayed, the recovery screen lets you download its data; starting over still means clearing the site's data, which deletes the board.
+6. The layout is desktop-only; export saves only the current branch's event log and there is no import, so browser storage is the only copy of a board.
 
 ---
 

@@ -25,7 +25,6 @@ export const CommandPalette: React.FC = () => {
       title: 'Manage branches',
       description: 'Create, switch or compare board branches',
       icon: <GitBranch className="w-4 h-4" />,
-      shortcut: 'Ctrl+B',
       category: 'Git',
       action: () => setShowBranchManager(true),
     },
@@ -147,11 +146,6 @@ export const CommandPalette: React.FC = () => {
                   <span className="text-xs bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 px-2 py-1 rounded border border-slate-200/50 dark:border-zinc-700/50">
                     {command.category}
                   </span>
-                  {command.shortcut && (
-                    <span className="text-xs text-slate-400 dark:text-zinc-500 font-mono">
-                      {command.shortcut}
-                    </span>
-                  )}
                 </div>
               </div>
             ))

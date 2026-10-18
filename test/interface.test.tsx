@@ -26,7 +26,7 @@ describe('header, columns and tour', () => {
     mounted.splice(0).forEach((reactRoot) => reactRoot.unmount());
   });
 
-  it.fails('every header button has an accessible name', async () => {
+  it('every header button has an accessible name', async () => {
     localStorage.setItem('kanbanlight-tour-completed', 'true');
     const root = await renderApp();
     const unnamed = [...root.querySelectorAll('header button')].filter(
@@ -35,7 +35,7 @@ describe('header, columns and tour', () => {
     expect(unnamed).toHaveLength(0);
   });
 
-  it.fails('column headers have no buttons', async () => {
+  it('column headers have no buttons', async () => {
     localStorage.setItem('kanbanlight-tour-completed', 'true');
     const root = await renderApp();
     const headers = [...root.querySelectorAll('h3')]
@@ -45,13 +45,13 @@ describe('header, columns and tour', () => {
     expect(headers.flatMap((header) => [...header.querySelectorAll('button')])).toHaveLength(0);
   });
 
-  it.fails('the branch badge shows the branch name only', async () => {
+  it('the branch badge shows the branch name only', async () => {
     localStorage.setItem('kanbanlight-tour-completed', 'true');
     const root = await renderApp();
     expect(root.querySelector('[data-tour="branch-badge"]')?.textContent?.trim()).toBe('main');
   });
 
-  it.fails('the tour settles on a step that points at a control', async () => {
+  it('the tour settles on a step that points at a control', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     let commits = 0;
     await renderApp(() => commits++);

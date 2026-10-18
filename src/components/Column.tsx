@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, MoreHorizontal, GitCommit } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Card } from './Card';
 import { useKanbanStore } from '../store/useKanbanStore';
 
@@ -65,14 +65,6 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
             <span className="text-xs bg-white/70 dark:bg-zinc-900/70 text-slate-600 dark:text-zinc-300 px-2 py-1 rounded-full border border-slate-200/50 dark:border-zinc-700/50">
               {cards.length + deletedCardsInColumn.length}
             </span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <button className="p-1 hover:bg-white/50 dark:hover:bg-zinc-800/50 rounded text-slate-500 dark:text-zinc-400">
-              <GitCommit className="w-4 h-4" />
-            </button>
-            <button className="p-1 hover:bg-white/50 dark:hover:bg-zinc-800/50 rounded text-slate-500 dark:text-zinc-400">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </div>

@@ -16,12 +16,15 @@ The app has no routes. It is a single page. There are no background jobs except 
 
 1. `index.html` loads `/src/main.tsx`.
 2. Module evaluation creates singletons before React renders:
-   - `src/services/BranchingService.ts:branchingService`. The constructor runs `loadBranches()`, which reads `localStorage['kanban-branches']`. If that key is missing, it creates and saves the `main` branch.
+   - `src/services/BranchingService.ts:branchingService`. The constructor runs `loadBranches()`, which reads `localStorage['kanban-branches']`:
+     - missing: creates and saves the `main` branch;
+     - not JSON, or not `[id, {id, name}]` pairs with a text pointer (`readSavedBranches` returns `null`): sets `loadError`, keeps the list empty and never saves, so the stored value is kept;
+     - pointer to a branch that is not listed: `keepUnknownPointer` adds it as a branch named `recovered` (or `recovered-2`, …) with parent `main`, and saves.
    - `src/services/DatabaseService.ts:databaseService` (no I/O yet).
    - `src/services/CliSyncService.ts:cliSyncService` (port 8080, not connected yet).
    - `src/store/useKanbanStore.ts:useKanbanStore`, a hand-rolled Zustand-style store on `useSyncExternalStore`.
-3. `src/main.tsx` renders `<App/>` inside `StrictMode`. In dev mode, StrictMode runs effects twice.
-4. `src/App.tsx:App` renders `ThemeProvider`, then `KanbanBoard` and `CommandPalette`.
+3. `src/main.tsx` renders `<App/>` inside `StrictMode` and `src/components/RecoveryScreen.tsx:RecoveryBoundary`. In dev mode, StrictMode runs effects twice. If any render below throws, the boundary replaces the page with `RecoveryScreen:RecoveryView`, which uses no store or provider. Its "Download data" button runs `RecoveryScreen:downloadData`: it reads every IndexedDB `kanban-light` object store read-only (opening with no version, and aborting the upgrade if no database exists so none is created) plus every `localStorage` key starting with `kanban`, and saves them as `kanbanlight-data-<date>.json`. Nothing is written or deleted.
+4. `src/App.tsx:App` renders `RecoveryScreen:RecoveryView` instead of the board when `branchingService.loadError` is set, so the store never initialises over an unreadable branch list. Otherwise it renders `ThemeProvider`, then `KanbanBoard` and `CommandPalette`.
 5. `src/components/KanbanBoard.tsx:KanbanBoard` runs `useEffect` → `useKanbanStore:initializeStore`:
    - `DatabaseService:initialize` opens IndexedDB `kanban-light` v2 and creates stores in `upgrade`.
    - `DatabaseService:getAllBoards`. If there is none, it creates `default-board` (`saveBoard`).
@@ -69,7 +72,9 @@ Storage split: branches and the active branch id live in `localStorage` (`Branch
 ```mermaid
 flowchart TD
   html[index.html] --> main[src/main.tsx]
-  main --> App[App.tsx] --> KB[KanbanBoard.tsx]
+  main --> RB[RecoveryBoundary] --> App[App.tsx] --> KB[KanbanBoard.tsx]
+  RB -->|render error| RV[RecoveryView: download only]
+  App -->|branch list unreadable| RV
   App --> CP[CommandPalette.tsx]
   KB -->|useEffect| init[useKanbanStore:initializeStore]
   init --> DB[(IndexedDB via DatabaseService)]

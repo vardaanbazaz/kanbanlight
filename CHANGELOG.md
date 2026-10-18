@@ -9,6 +9,8 @@
 
 ### Fixed
 
+- A branch list that cannot be read is no longer replaced with a new, empty one; the recovery screen opens instead. A current-branch pointer to a missing branch, left by the CLI branch bug, is kept as a branch named `recovered`, so switching to `main` no longer overwrites it.
+- A board whose stored data cannot be displayed now shows a recovery screen with a download of everything the app has stored in this browser, instead of a blank page.
 - CLI `switch` and `compare` accept a branch's name. A name the board does not know, a name shared by several branches, or a blank name is ignored instead of creating a broken branch.
 
 ## 0.0.1 — 2026-10-04

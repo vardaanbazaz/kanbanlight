@@ -72,13 +72,13 @@ describe('the bridge server', () => {
     process.exitCode = undefined;
   });
 
-  it.fails('listens on 127.0.0.1 only, with a 64 KiB message limit', async () => {
+  it('listens on 127.0.0.1 only, with a 64 KiB message limit', async () => {
     const server = await startServer();
     expect(server.options.host).toBe('127.0.0.1');
     expect(server.options.maxPayload).toBe(64 * 1024);
   });
 
-  it.fails('accepts only the CLI and the local web app', async () => {
+  it('accepts only the CLI and the local web app', async () => {
     const server = await startServer();
     const allows = (origin: string | undefined) =>
       server.options.verifyClient?.({ origin, secure: false, req: {} }) ?? true;
@@ -90,14 +90,14 @@ describe('the bridge server', () => {
     ]);
   });
 
-  it.fails('says it is listening only once it is', async () => {
+  it('says it is listening only once it is', async () => {
     const server = await startServer();
     expect(printed).not.toMatch(/listening/i);
     server.emit('listening');
     expect(printed).toMatch(/listening/i);
   });
 
-  it.fails('reports a busy port and exits 1', async () => {
+  it('reports a busy port and exits 1', async () => {
     const server = await startServer();
     try {
       server.emit('error', Object.assign(new Error('listen EADDRINUSE'), { code: 'EADDRINUSE' }));
@@ -108,7 +108,7 @@ describe('the bridge server', () => {
     expect(vi.mocked(process.exit).mock.calls.flat().concat(process.exitCode ?? [])).toContain(1);
   });
 
-  it.fails('never prints the contents of a relayed message', async () => {
+  it('never prints the contents of a relayed message', async () => {
     const server = await startServer();
     const client = new FakeClient();
     server.emit('connection', client);
@@ -116,12 +116,25 @@ describe('the bridge server', () => {
     expect(printed).not.toContain('private text');
   });
 
-  it.fails('does not relay a message that is not a JSON object', async () => {
+  it('does not relay a message that is not a JSON object', async () => {
     const server = await startServer();
     const client = new FakeClient();
     server.emit('connection', client);
     client.sent.length = 0;
     client.emit('message', Buffer.from('42'));
     expect(client.sent).toEqual([]);
+  });
+
+  it('relays a JSON object to every open client and logs its type', async () => {
+    const server = await startServer();
+    const sender = new FakeClient();
+    const board = new FakeClient();
+    server.emit('connection', sender);
+    server.emit('connection', board);
+    board.sent.length = 0;
+    const frame = JSON.stringify({ type: 'SWITCH_BRANCH', payload: 'idea' });
+    sender.emit('message', Buffer.from(frame));
+    expect(board.sent).toEqual([frame]);
+    expect(printed).toContain('Relayed SWITCH_BRANCH to 2 clients');
   });
 });

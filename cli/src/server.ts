@@ -1,9 +1,24 @@
-import WebSocket from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import chalk from 'chalk';
 
+const HOST = '127.0.0.1';
+
+// The web app from `npm run dev` (5173) or `npm run preview` (4173). The CLI's own client sends no Origin.
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:4173',
+];
+
+function failToStart(message: string): void {
+  console.error(chalk.red(`Couldn't start the bridge: ${message}`));
+  process.exit(1);
+}
+
 export class CliBridgeServer {
-  private wss: any = null;
-  private clients: Set<any> = new Set();
+  private wss: WebSocketServer | null = null;
+  private clients: Set<WebSocket> = new Set();
   private port: number;
 
   constructor(port: number = 8080) {
@@ -12,33 +27,54 @@ export class CliBridgeServer {
 
   public start(): void {
     try {
-      const ServerClass = (WebSocket as any).Server || (WebSocket as any).WebSocketServer || WebSocket;
-      this.wss = new ServerClass({ port: this.port });
+      this.wss = new WebSocketServer({
+        host: HOST,
+        port: this.port,
+        maxPayload: 64 * 1024,
+        verifyClient: ({ origin }: { origin: string | undefined }) =>
+          origin === undefined || ALLOWED_ORIGINS.includes(origin),
+      });
 
-      console.log(chalk.bold.green(`\n🚀 KanbanLight CLI Bridge Server listening on ws://localhost:${this.port}`));
-      console.log(chalk.gray('Ready to synchronize CLI commands with live React UI...\n'));
+      this.wss.on('listening', () => {
+        console.log(
+          chalk.bold.green(
+            `Bridge listening on ${HOST}:${this.port}. Open KanbanLight from npm run dev; it connects to port 8080. Press Ctrl+C to stop.`
+          )
+        );
+      });
 
-      this.wss.on('connection', (ws: any) => {
+      this.wss.on('error', (err: NodeJS.ErrnoException) => {
+        failToStart(err.code === 'EADDRINUSE' ? `port ${this.port} is already in use.` : err.message);
+      });
+
+      this.wss.on('connection', (ws: WebSocket) => {
         this.clients.add(ws);
         console.log(chalk.cyan(`[Bridge] Client connected (${this.clients.size} active connections)`));
 
         // Send welcome handshake
         ws.send(JSON.stringify({ type: 'HANDSHAKE_ACK', payload: { connectedClients: this.clients.size } }));
 
-        ws.on('message', (message: any) => {
+        ws.on('message', (message: Buffer) => {
+          let data: unknown;
           try {
-            const data = JSON.parse(message.toString());
-            console.log(chalk.yellow(`[Bridge Command] ${data.type}`), data.payload || '');
-
-            // Broadcast message to all connected clients
-            for (const client of this.clients) {
-              if (client.readyState === 1 || client.readyState === (WebSocket as any).OPEN) {
-                client.send(JSON.stringify(data));
-              }
-            }
-          } catch (err) {
-            console.error(chalk.red('[Bridge Error] Invalid JSON message received:'), err);
+            data = JSON.parse(message.toString());
+          } catch {
+            data = null;
           }
+          if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+            console.error(chalk.red('Dropped a message that is not a JSON object.'));
+            return;
+          }
+
+          // Broadcast message to all connected clients; log the type only, never the payload
+          let relayed = 0;
+          for (const client of this.clients) {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify(data));
+              relayed++;
+            }
+          }
+          console.log(chalk.yellow(`Relayed ${String((data as { type?: unknown }).type)} to ${relayed} clients`));
         });
 
         ws.on('close', () => {
@@ -46,7 +82,7 @@ export class CliBridgeServer {
           console.log(chalk.gray(`[Bridge] Client disconnected (${this.clients.size} active connections)`));
         });
 
-        ws.on('error', (err: any) => {
+        ws.on('error', (err: Error) => {
           console.error(chalk.red('[Bridge Socket Error]:'), err.message);
         });
       });
@@ -55,7 +91,7 @@ export class CliBridgeServer {
       process.on('SIGINT', () => this.stop());
       process.on('SIGTERM', () => this.stop());
     } catch (error) {
-      console.error(chalk.red(`Failed to start CLI Bridge Server on port ${this.port}:`), error);
+      failToStart((error as Error).message);
     }
   }
 
@@ -63,7 +99,7 @@ export class CliBridgeServer {
     console.log(chalk.yellow('\nShutting down CLI Bridge Server...'));
     if (this.wss) {
       for (const client of this.clients) {
-        if (typeof client.close === 'function') client.close();
+        client.close();
       }
       this.wss.close(() => {
         console.log(chalk.green('CLI Bridge Server stopped successfully.'));

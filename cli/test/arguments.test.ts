@@ -69,19 +69,19 @@ describe('command-line arguments', () => {
     process.exitCode = undefined;
   });
 
-  it.fails('rejects a priority the board does not have', async () => {
+  it('rejects a priority the board does not have', async () => {
     const result = await run('add', 'x', '-p', 'urgent');
     expect(sent.frames).toEqual([]);
     expect(result.output).toMatch(/low.*medium.*high/s);
   });
 
-  it.fails('rejects a column the board does not have', async () => {
+  it('rejects a column the board does not have', async () => {
     const result = await run('add', 'x', '-c', 'nowhere');
     expect(sent.frames).toEqual([]);
     expect(result.output).toMatch(/backlog/);
   });
 
-  it.fails.each([
+  it.each([
     ['an empty card title', ['add', '']],
     ['a blank branch name', ['branch', '  ']],
     ['extra words after the title', ['add', 'Fix', 'login', 'bug']],
@@ -92,7 +92,7 @@ describe('command-line arguments', () => {
     expect(result.output.trim()).not.toBe('');
   });
 
-  it.fails.each([['abc'], ['99999'], ['18080abc']])('rejects the port %s', async (port) => {
+  it.each([['abc'], ['99999'], ['18080abc']])('rejects the port %s', async (port) => {
     const result = await run('serve', '-p', port);
     expect(sent.serverPorts).toEqual([]);
     expect(result.exitCode).toBe(1);

@@ -5,6 +5,8 @@
 ### Security
 
 - The web app checks every message from the CLI bridge and ignores malformed ones (wrong types, unknown columns or priorities, oversized text, unknown fields). It no longer writes message contents to the browser console.
+- The hosted site no longer tries to connect to a bridge on your computer. A page served by `npm run dev` or `npm run preview` connects to `127.0.0.1` only.
+- The hosted site sends security headers, including a content security policy. Images from other sites in card descriptions no longer load.
 - Bumped Vite to 5.4.21 for development-server advisories. Affects `npm run dev` only.
 
 ### Fixed

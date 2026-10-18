@@ -35,6 +35,14 @@ it('a branch pointer to an unknown branch is kept as a branch named recovered, o
   expect(storedBranches().branches.map(([id]) => id)).toEqual(['main', 'branch-1', 'phantom-1']);
 });
 
+it('a pointer to main when main is not listed recreates main, not a recovered branch', async () => {
+  const branches = [['branch-1', { id: 'branch-1', name: 'idea' }]];
+  localStorage.setItem('kanban-branches', JSON.stringify({ branches, currentBranch: 'main' }));
+  const tab = await openTab();
+  expect(tab.branching.getCurrentBranch()).toMatchObject({ id: 'main', name: 'main', parentId: null });
+  expect(storedBranches().branches.map(([id]) => id)).toEqual(['branch-1', 'main']);
+});
+
 it.each([
   ['branches that are not a list', '{"branches":"x","currentBranch":"main"}'],
   ['an entry without a name', '{"branches":[["main",{"id":"main"}]],"currentBranch":"main"}'],

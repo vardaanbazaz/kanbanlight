@@ -10,7 +10,7 @@ How execution moves through KanbanLight 0.0.1. This describes the current code; 
 | CLI | `npx tsx src/index.ts <command>` from `cli/` (written `kb <command>` below; `kb` is not installed by any step) | `cli/src/index.ts` |
 | CLI bridge server | `kb serve` (alias `kb start`), default port 8080 | `cli/src/server.ts:startCliServer` |
 
-The app has no routes. It is a single page. There are no background jobs except the bridge reconnect timer (below).
+The app has no routes. It is a single page. There are no background jobs except the bridge reconnect timer (below), which runs only on a page served from `localhost` or `127.0.0.1`.
 
 ## Browser app: startup order
 
@@ -19,7 +19,7 @@ The app has no routes. It is a single page. There are no background jobs except 
    - `src/services/BranchingService.ts:branchingService`. The constructor runs `loadBranches()`, which reads `localStorage['kanban-branches']`:
      - missing: creates and saves the `main` branch;
      - not JSON, or not `[id, {id, name}]` pairs with a text pointer (`readSavedBranches` returns `null`): sets `loadError`, keeps the list empty and never saves, so the stored value is kept;
-     - pointer to a branch that is not listed: `keepUnknownPointer` adds it as a branch named `recovered` (or `recovered-2`, …) with parent `main`, and saves.
+     - pointer to a branch that is not listed: `keepUnknownPointer` adds it as a branch named `recovered` (or `recovered-2`, …) with parent `main`, and saves. A pointer to a missing `main` recreates `main` instead (`createMainBranch`).
    - `src/services/DatabaseService.ts:databaseService` (no I/O yet).
    - `src/services/CliSyncService.ts:cliSyncService` (port 8080, not connected yet).
    - `src/store/useKanbanStore.ts:useKanbanStore`, a hand-rolled Zustand-style store on `useSyncExternalStore`.
@@ -30,7 +30,7 @@ The app has no routes. It is a single page. There are no background jobs except 
    - `DatabaseService:getAllBoards`. If there is none, it creates `default-board` (`saveBoard`).
    - `DatabaseService:getCardsByBoard` and `getEventsByBoard`.
    - It builds the local user (`name: 'You'`).
-   - `CliSyncService:connect` opens `ws://localhost:8080`. On close it reconnects every 3 s (`scheduleReconnect`).
+   - `CliSyncService:connect` returns at once unless the page's hostname is `localhost` or `127.0.0.1`, so the hosted site never opens a socket. Otherwise it opens `ws://127.0.0.1:8080` and, on close, reconnects every 3 s (`scheduleReconnect`). `isCliConnected` is written only when it changes (`setConnected`).
    - `activeBranchId` comes from `BranchingService:getCurrentBranch`.
    - If the branch has no snapshot (`DatabaseService:getLatestSnapshotByBranch`), it calls `useKanbanStore:createSnapshot`.
 6. `KanbanBoard` opens `GuidedTour` on first visit, when `localStorage['kanbanlight-tour-completed']` is not `'true'`.

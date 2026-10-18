@@ -2,6 +2,14 @@ import { useKanbanStore } from '../store/useKanbanStore';
 import { branchingService } from './BranchingService';
 import { parseBridgeFrame, resolveBranch, type BridgeCommand } from './bridgeProtocol';
 
+// Only a page served from this computer may reach the bridge; the hosted site never tries.
+const LOCAL_HOSTNAMES = ['localhost', '127.0.0.1'];
+
+// Writes only on change, so a bridge that stays down does not re-render the board on every retry.
+function setConnected(connected: boolean): void {
+  if (useKanbanStore.getState().isCliConnected !== connected) useKanbanStore.setState({ isCliConnected: connected });
+}
+
 export class CliSyncService {
   private socket: WebSocket | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -12,16 +20,17 @@ export class CliSyncService {
   }
 
   public connect(): void {
+    if (!LOCAL_HOSTNAMES.includes(window.location.hostname)) return;
     if (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN)) {
       return;
     }
 
     try {
-      this.socket = new WebSocket(`ws://localhost:${this.port}`);
+      this.socket = new WebSocket(`ws://127.0.0.1:${this.port}`);
 
       this.socket.onopen = () => {
         console.log(`[CliSyncService] Connected to local CLI Bridge Server on port ${this.port}`);
-        useKanbanStore.setState({ isCliConnected: true });
+        setConnected(true);
         if (this.reconnectTimer) {
           clearTimeout(this.reconnectTimer);
           this.reconnectTimer = null;
@@ -42,16 +51,16 @@ export class CliSyncService {
       };
 
       this.socket.onclose = () => {
-        useKanbanStore.setState({ isCliConnected: false });
+        setConnected(false);
         this.scheduleReconnect();
       };
 
       this.socket.onerror = () => {
-        useKanbanStore.setState({ isCliConnected: false });
+        setConnected(false);
         this.socket?.close();
       };
     } catch {
-      useKanbanStore.setState({ isCliConnected: false });
+      setConnected(false);
       this.scheduleReconnect();
     }
   }
@@ -120,7 +129,7 @@ export class CliSyncService {
       this.socket.close();
       this.socket = null;
     }
-    useKanbanStore.setState({ isCliConnected: false });
+    setConnected(false);
   }
 }
 

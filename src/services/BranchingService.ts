@@ -54,25 +54,32 @@ class BranchingService {
       this.currentBranch = data.currentBranch || 'main';
       if (!this.branches.has(this.currentBranch)) this.keepUnknownPointer();
     } else {
-      // Create default main branch
-      const mainBranch: BoardBranch = {
-        id: 'main',
-        name: 'main',
-        parentId: null,
-        boardSnapshot: null,
-        createdAt: Date.now(),
-        lastCommit: 'init',
-        author: 'system',
-        description: 'Default branch'
-      };
-      this.branches.set('main', mainBranch);
+      this.branches.set('main', this.createMainBranch());
       this.saveBranches();
     }
   }
 
+  private createMainBranch(): BoardBranch {
+    return {
+      id: 'main',
+      name: 'main',
+      parentId: null,
+      boardSnapshot: null,
+      createdAt: Date.now(),
+      lastCommit: 'init',
+      author: 'system',
+      description: 'Default branch'
+    };
+  }
+
   // An earlier version could point at a branch that is not listed. List it, so its working copy
-  // belongs to a visible branch and switching to main loads main's own snapshot.
+  // belongs to a visible branch and switching to main loads main's own snapshot. A missing main is recreated as main.
   private keepUnknownPointer(): void {
+    if (this.currentBranch === 'main') {
+      this.branches.set('main', this.createMainBranch());
+      this.saveBranches();
+      return;
+    }
     const names = new Set(this.getBranches().map((branch) => branch.name));
     let name = 'recovered';
     for (let n = 2; names.has(name); n++) name = `recovered-${n}`;

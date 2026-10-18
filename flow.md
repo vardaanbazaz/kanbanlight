@@ -57,14 +57,14 @@ Storage split: branches and the active branch id live in `localStorage` (`Branch
 2. `kb serve` → `cli/src/server.ts:startCliServer` → `CliBridgeServer:start`. This is a `ws` server that broadcasts every message it receives to all connected clients.
 3. Every other command (`checkout`/`switch`, `add`, `branch [-b]`, `compare`/`diff`, `exit-diff`) → `cli/src/commands/index.ts:<command>` → `cli/src/services/BridgeClient.ts:sendToBridge`. That opens a socket, sends one JSON message and closes. If the bridge is down it returns `false` after a 1.2 s timeout, and the command sets `process.exitCode = 1`.
 4. The bridge broadcasts to the browser → `src/services/CliSyncService.ts:onmessage` → `src/services/bridgeProtocol.ts:parseBridgeFrame`, which checks the frame (size, JSON object, known type, no extra keys, field types and lengths, known column and priority). A rejected frame logs one `console.warn` with the reason (never the frame) and changes nothing. An accepted frame goes to `CliSyncService:handleCommand`:
-   - `SWITCH_BRANCH` → `useKanbanStore:switchBranch`
+   - `SWITCH_BRANCH` → `bridgeProtocol:resolveBranch` → `BranchingService:switchBranch`
    - `CREATE_BRANCH` → `BranchingService:createBranch` (then `switchBranch` if `checkout`)
-   - `COMPARE_BRANCH` → `useKanbanStore:startBranchDiff`
+   - `COMPARE_BRANCH` → `bridgeProtocol:resolveBranch` → `useKanbanStore:startBranchDiff`
    - `EXIT_DIFF` → `useKanbanStore:exitDiffMode`
    - `CREATE_CARD` → `useKanbanStore:createCard`
    - `HANDSHAKE_ACK` (the bridge's greeting) → ignored
 
-`SWITCH_BRANCH` from the CLI calls the store directly and skips `BranchingService:switchBranch`, so a branch name that is not a known branch id is not rejected. This is the path behind the CLI branch known issue in the README.
+`resolveBranch` takes the CLI's branch name or id: an exact id wins, otherwise the name must belong to exactly one branch. An unknown or shared name logs one `console.warn` and changes nothing.
 
 ```mermaid
 flowchart TD

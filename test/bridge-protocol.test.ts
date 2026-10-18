@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseBridgeFrame } from '../src/services/bridgeProtocol';
+import { parseBridgeFrame, resolveBranch } from '../src/services/bridgeProtocol';
 
 const card = { title: 'ok', columnId: 'todo', priority: 'medium', description: '', assignee: 'You' };
 
@@ -90,6 +90,9 @@ describe('parseBridgeFrame', () => {
     ['a switch to a name that is not text', frame({ type: 'SWITCH_BRANCH', payload: { name: 'y' } }), /branch name/],
     ['a switch to an empty name', frame({ type: 'SWITCH_BRANCH', payload: '' }), /branch name/],
     ['a compare with a name over 100 characters', frame({ type: 'COMPARE_BRANCH', payload: 'x'.repeat(101) }), /branch name/],
+    ['a branch with a blank name', frame({ type: 'CREATE_BRANCH', payload: { name: '   ' } }), /branch name is blank/],
+    ['a switch to a blank name', frame({ type: 'SWITCH_BRANCH', payload: ' \t ' }), /branch name is blank/],
+    ['a compare with a blank name', frame({ type: 'COMPARE_BRANCH', payload: '  ' }), /branch name is blank/],
   ];
 
   it.each(rejected)('rejects %s, with a reason that does not repeat the frame', (_label, raw, reason) => {
@@ -99,5 +102,49 @@ describe('parseBridgeFrame', () => {
     expect(result.reason).toMatch(reason);
     expect(result.reason).not.toContain('pwned');
     expect(result.reason.length).toBeLessThan(100);
+  });
+
+  it('measures the size limit in bytes, not characters', () => {
+    // 'é' is one character but two bytes in UTF-8.
+    const overhead = frame({ type: 'EXIT_DIFF', payload: '' }).length;
+    const fits = Math.floor((64 * 1024 - overhead) / 2);
+    const under = frame({ type: 'EXIT_DIFF', payload: 'é'.repeat(fits) });
+    const over = frame({ type: 'EXIT_DIFF', payload: 'é'.repeat(fits + 1) });
+    expect(new TextEncoder().encode(under).length).toBeLessThanOrEqual(64 * 1024);
+    expect(new TextEncoder().encode(over).length).toBeGreaterThan(64 * 1024);
+    expect(over.length).toBeLessThan(64 * 1024);
+
+    expect(parseBridgeFrame(under).ok).toBe(true);
+    expect(parseBridgeFrame(over)).toEqual({ ok: false, reason: 'frame is larger than 64 KiB' });
+  });
+});
+
+describe('resolveBranch', () => {
+  const branches = [
+    { id: 'main', name: 'main' },
+    { id: 'branch-1', name: 'idea' },
+    { id: 'branch-2', name: 'twin' },
+    { id: 'branch-3', name: 'twin' },
+    { id: 'branch-4', name: 'branch-1' },
+  ];
+
+  it('finds a branch by id', () => {
+    expect(resolveBranch('branch-2', branches)).toEqual({ ok: true, id: 'branch-2' });
+  });
+
+  it('prefers an id over a branch with that name', () => {
+    expect(resolveBranch('branch-1', branches)).toEqual({ ok: true, id: 'branch-1' });
+  });
+
+  it('finds a branch by its unique name', () => {
+    expect(resolveBranch('idea', branches)).toEqual({ ok: true, id: 'branch-1' });
+  });
+
+  it('rejects a name it does not know', () => {
+    expect(resolveBranch('nope', branches)).toEqual({ ok: false, reason: 'no branch named "nope"' });
+  });
+
+  it('rejects a name that several branches share', () => {
+    expect(resolveBranch('twin', branches)).toEqual({ ok: false, reason: 'several branches named "twin"' });
   });
 });

@@ -39,6 +39,11 @@ const onlyKeys = (value: Record<string, unknown>, allowed: string[]) =>
 const isText = (value: unknown, min: number, max: number): value is string =>
   typeof value === 'string' && value.length >= min && value.length <= max;
 
+// Branch names are kept as sent, but one that is only whitespace is refused.
+const isBranchName = (value: unknown): value is string => isText(value, 1, 100) && value.trim() !== '';
+const branchNameReason = (value: unknown) =>
+  isText(value, 1, 100) ? 'branch name is blank' : 'branch name must be text of 1 to 100 characters';
+
 const isOneOf = <T extends string>(value: unknown, options: readonly T[]): value is T =>
   typeof value === 'string' && (options as readonly string[]).includes(value);
 
@@ -72,7 +77,7 @@ function parseBranch(payload: unknown): ParseResult {
   if (!isObject(payload)) return reject('branch payload is not an object');
   if (!onlyKeys(payload, ['name', 'checkout'])) return reject('branch payload has unknown fields');
   const { name, checkout } = payload;
-  if (!isText(name, 1, 100)) return reject('branch name must be text of 1 to 100 characters');
+  if (!isBranchName(name)) return reject(branchNameReason(name));
   if (checkout !== undefined && typeof checkout !== 'boolean') return reject('branch checkout is not true or false');
   return {
     ok: true,
@@ -99,7 +104,7 @@ export function parseBridgeFrame(raw: string): ParseResult {
       return parseBranch(data.payload);
     case 'SWITCH_BRANCH':
     case 'COMPARE_BRANCH':
-      if (!isText(data.payload, 1, 100)) return reject('branch name must be text of 1 to 100 characters');
+      if (!isBranchName(data.payload)) return reject(branchNameReason(data.payload));
       return { ok: true, command: { type: data.type, payload: data.payload } };
     case 'EXIT_DIFF':
     case 'HANDSHAKE_ACK':
@@ -107,4 +112,19 @@ export function parseBridgeFrame(raw: string): ParseResult {
     default:
       return reject('frame type is not known');
   }
+}
+
+export interface BranchRef {
+  id: string;
+  name: string;
+}
+
+export type ResolveResult = { ok: true; id: string } | { ok: false; reason: string };
+
+// An exact id wins; otherwise the name must belong to exactly one branch.
+export function resolveBranch(nameOrId: string, branches: BranchRef[]): ResolveResult {
+  if (branches.some((branch) => branch.id === nameOrId)) return { ok: true, id: nameOrId };
+  const matches = branches.filter((branch) => branch.name === nameOrId);
+  if (matches.length === 1) return { ok: true, id: matches[0].id };
+  return { ok: false, reason: `${matches.length ? 'several branches' : 'no branch'} named "${nameOrId}"` };
 }

@@ -7,6 +7,10 @@
 - The web app checks every message from the CLI bridge and ignores malformed ones (wrong types, unknown columns or priorities, oversized text, unknown fields). It no longer writes message contents to the browser console.
 - Bumped Vite to 5.4.21 for development-server advisories. Affects `npm run dev` only.
 
+### Fixed
+
+- CLI `switch` and `compare` accept a branch's name. A name the board does not know, a name shared by several branches, or a blank name is ignored instead of creating a broken branch.
+
 ## 0.0.1 — 2026-10-04
 
 Changes since the git tag `pre-audit-2026-09`. The parked code is preserved under that tag.

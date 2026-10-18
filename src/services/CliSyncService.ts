@@ -1,6 +1,6 @@
 import { useKanbanStore } from '../store/useKanbanStore';
 import { branchingService } from './BranchingService';
-import { parseBridgeFrame, type BridgeCommand } from './bridgeProtocol';
+import { parseBridgeFrame, resolveBranch, type BridgeCommand } from './bridgeProtocol';
 
 export class CliSyncService {
   private socket: WebSocket | null = null;
@@ -70,8 +70,17 @@ export class CliSyncService {
 
     switch (data.type) {
       case 'SWITCH_BRANCH':
-        await store.switchBranch(data.payload);
+      case 'COMPARE_BRANCH': {
+        const branch = resolveBranch(data.payload, branchingService.getBranches());
+        if (!branch.ok) {
+          console.warn(`[CliSyncService] Ignored a bridge message: ${branch.reason}`);
+        } else if (data.type === 'SWITCH_BRANCH') {
+          await branchingService.switchBranch(branch.id);
+        } else {
+          await store.startBranchDiff(branch.id);
+        }
         break;
+      }
 
       case 'CREATE_BRANCH': {
         const newBranch = await branchingService.createBranch(data.payload.name, store.activeBranchId || 'main');
@@ -80,10 +89,6 @@ export class CliSyncService {
         }
         break;
       }
-
-      case 'COMPARE_BRANCH':
-        await store.startBranchDiff(data.payload);
-        break;
 
       case 'EXIT_DIFF':
         store.exitDiffMode();

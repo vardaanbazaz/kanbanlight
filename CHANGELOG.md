@@ -4,6 +4,7 @@
 
 ### Security
 
+- The web app checks every message from the CLI bridge and ignores malformed ones (wrong types, unknown columns or priorities, oversized text, unknown fields). It no longer writes message contents to the browser console.
 - Bumped Vite to 5.4.21 for development-server advisories. Affects `npm run dev` only.
 
 ## 0.0.1 — 2026-10-04

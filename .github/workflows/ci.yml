@@ -27,9 +27,7 @@ jobs:
       - name: Audit runtime dependencies
         run: npm audit --omit=dev --audit-level=high
       - run: npm run typecheck
-      - name: Lint (known failures until the 0.0.2 patch, not blocking)
-        run: npm run lint
-        continue-on-error: true
+      - run: npm run lint
       - run: npm test
       - run: npm run build
 

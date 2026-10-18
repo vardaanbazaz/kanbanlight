@@ -1,9 +1,10 @@
 import { useKanbanStore } from '../store/useKanbanStore';
 import { branchingService } from './BranchingService';
+import { parseBridgeFrame, type BridgeCommand } from './bridgeProtocol';
 
 export class CliSyncService {
   private socket: WebSocket | null = null;
-  private reconnectTimer: any = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private port: number;
 
   constructor(port: number = 8080) {
@@ -28,12 +29,15 @@ export class CliSyncService {
       };
 
       this.socket.onmessage = async (event: MessageEvent) => {
+        const result = parseBridgeFrame(typeof event.data === 'string' ? event.data : '');
+        if (!result.ok) {
+          console.warn(`[CliSyncService] Ignored a bridge message: ${result.reason}`);
+          return;
+        }
         try {
-          const data = JSON.parse(event.data);
-          console.log('[CliSyncService] Incoming CLI command payload:', data);
-          await this.handleCommand(data);
+          await this.handleCommand(result.command);
         } catch (err) {
-          console.error('[CliSyncService] Error parsing incoming command:', err);
+          console.error('[CliSyncService] Error applying a bridge command:', err);
         }
       };
 
@@ -46,7 +50,7 @@ export class CliSyncService {
         useKanbanStore.setState({ isCliConnected: false });
         this.socket?.close();
       };
-    } catch (err) {
+    } catch {
       useKanbanStore.setState({ isCliConnected: false });
       this.scheduleReconnect();
     }
@@ -61,29 +65,24 @@ export class CliSyncService {
     }
   }
 
-  private async handleCommand(data: { type: string; payload: any }): Promise<void> {
+  private async handleCommand(data: BridgeCommand): Promise<void> {
     const store = useKanbanStore.getState();
 
     switch (data.type) {
       case 'SWITCH_BRANCH':
-        if (typeof data.payload === 'string') {
-          await store.switchBranch(data.payload);
-        }
+        await store.switchBranch(data.payload);
         break;
 
-      case 'CREATE_BRANCH':
-        if (data.payload?.name) {
-          const newBranch = await branchingService.createBranch(data.payload.name, store.activeBranchId || 'main');
-          if (data.payload.checkout) {
-            await store.switchBranch(newBranch.id);
-          }
+      case 'CREATE_BRANCH': {
+        const newBranch = await branchingService.createBranch(data.payload.name, store.activeBranchId || 'main');
+        if (data.payload.checkout) {
+          await store.switchBranch(newBranch.id);
         }
         break;
+      }
 
       case 'COMPARE_BRANCH':
-        if (typeof data.payload === 'string') {
-          await store.startBranchDiff(data.payload);
-        }
+        await store.startBranchDiff(data.payload);
         break;
 
       case 'EXIT_DIFF':
@@ -91,21 +90,19 @@ export class CliSyncService {
         break;
 
       case 'CREATE_CARD':
-        if (data.payload?.title) {
-          await store.createCard(
-            data.payload.title,
-            data.payload.columnId || 'backlog',
-            {
-              description: data.payload.description || '',
-              priority: data.payload.priority || 'medium',
-              assignee: data.payload.assignee || 'You',
-            }
-          );
-        }
+        await store.createCard(
+          data.payload.title,
+          data.payload.columnId || 'backlog',
+          {
+            description: data.payload.description || '',
+            priority: data.payload.priority || 'medium',
+            assignee: data.payload.assignee || 'You',
+          }
+        );
         break;
 
-      default:
-        console.log('[CliSyncService] Unhandled command type:', data.type);
+      case 'HANDSHAKE_ACK':
+        break;
     }
   }
 

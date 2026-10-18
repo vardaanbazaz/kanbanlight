@@ -22,7 +22,7 @@ describe('malformed bridge messages', () => {
     expect(await storedCards()).toEqual([]);
   });
 
-  it.fails.each(malformed)('stores nothing for a card with %s', async (_label, frame) => {
+  it.each(malformed)('stores nothing for a card with %s', async (_label, frame) => {
     const tab = await openTab();
     await tab.deliver(frame);
     expect(tab.state().cards).toEqual([]);
@@ -30,13 +30,13 @@ describe('malformed bridge messages', () => {
     expect(await storedCards()).toEqual([]);
   });
 
-  it.fails('stores nothing for a branch whose name is an object', async () => {
+  it('stores nothing for a branch whose name is an object', async () => {
     const tab = await openTab();
     await tab.deliver({ type: 'CREATE_BRANCH', payload: { name: { pwned: 1 } } });
     expect(storedBranches().branches.map(([id]) => id)).toEqual(['main']);
   });
 
-  it.fails('never writes a received message to the console', async () => {
+  it('never writes a received message to the console', async () => {
     const log = vi.mocked(console.log);
     const tab = await openTab();
     log.mockClear();

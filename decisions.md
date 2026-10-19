@@ -4,6 +4,48 @@ Newest first. Each entry records what was decided, the reason given at the time,
 
 Some entries were written after the fact. They say so in **Source**. Where nobody wrote a reason down, the entry says "Not recorded"; reasons are never reconstructed.
 
+### 2026-10-17: The CLI rejects extra words instead of joining them
+- **Decision:** every `kb` command refuses positional arguments it does not expect. `kb add Fix login bug` is an error that names the extra words, exits with code 1 and sends nothing; a title with spaces must be quoted.
+- **Why:** the CLI used to ignore extra words, so an unquoted title was cut to its first word (`kb add Fix login bug` made a card titled "Fix") and the command still reported success. Joining the words instead would hide typos, such as a missing quote.
+- **Alternatives considered:** joining the extra words into the title.
+- **Tradeoff accepted:** titles with spaces must be quoted.
+- **Source:** recorded at the time.
+
+### 2026-10-17: The bridge refuses web pages except the local web app
+- **Decision:** the bridge refuses every web page except the web app served on `http://localhost` or `http://127.0.0.1` at port 5173 (`npm run dev`) or port 4173 (`npm run preview`). The hosted site is refused. Connections without an `Origin` header, such as the CLI's, are accepted, so any program on this computer can still connect. There is no option to allow another origin in 0.0.2.
+- **Why:** part of locking down the bridge in the 0.0.2 patch; "2026-10-17: Rebuild plan" records that "the open bridge is the biggest security risk". A fixed list is the smallest safe change for a patch; configurable access comes with pairing in 0.2.
+- **Alternatives considered:** an `--allow-origin` flag, deferred to 0.2.
+- **Tradeoff accepted:** if Vite falls back to another port (for example 5174 because 5173 is busy), the bridge refuses the page. The CLI README says to use the default dev port.
+- **Source:** recorded at the time.
+
+### 2026-10-17: Remote images are blocked on the hosted site
+- **Decision:** the hosted site's content security policy allows images only from the site itself and `data:` URLs (`img-src 'self' data:`). Images from other sites in card descriptions do not load there.
+- **Why:** a remote image can be used as a tracking pixel and reveals the viewer's IP address to the image's host.
+- **Alternatives considered:** allowing remote images (they loaded before 0.0.2).
+- **Tradeoff accepted:** cards that showed remote images show them no longer on the hosted site.
+- **Source:** recorded at the time.
+
+### 2026-10-17: Recovery screen offers a download, not a reset
+- **Decision:** when the board cannot be displayed, the app shows a recovery screen with a download of what it has stored in this browser and an instruction to clear the site's data to start over. There is no Reset button.
+- **Why:** a reset needs a destructive confirmation dialog and more code. "Delete all data" in Settings comes later.
+- **Alternatives considered:** a Reset button on the recovery screen.
+- **Tradeoff accepted:** starting over means clearing site data in the browser's settings.
+- **Source:** recorded at the time.
+
+### 2026-10-17: A current-branch pointer to a missing branch is kept as `recovered`
+- **Decision:** if the stored current branch is not in the branch list, the app lists it as a branch named `recovered` (or `recovered-2` and so on if that name is taken) instead of falling back to `main`.
+- **Why:** an earlier CLI bug could leave such a pointer. Without a listed branch, the next switch would overwrite `main` with that branch's cards.
+- **Alternatives considered:** falling back to `main`, the old behaviour, which let the next switch overwrite `main`.
+- **Tradeoff accepted:** boards where `main` was already overwritten cannot be repaired; the README says so under Known issues.
+- **Source:** recorded at the time.
+
+### 2026-10-17: `kb branch -b` stays as a no-op until 0.2; usage errors exit with code 1
+- **Decision:** `-b` is still accepted and makes no difference, because the board always switches to a new branch. Usage errors (unknown option values, extra words, blank names, invalid ports) exit with code 1, commander's default.
+- **Why:** existing scripts that pass `-b` do not start failing. Code 1 is commander's default and matches the documented behaviour; separate exit codes come with replies from the board in 0.2.
+- **Alternatives considered:** removing `-b` now (it goes with `switch -c` in 0.2); exit code 2 for usage errors.
+- **Tradeoff accepted:** a flag that does nothing stays until 0.2.
+- **Source:** recorded at the time.
+
 ### 2026-10-17: Rebuild plan
 - **Decision:** how KanbanLight is rebuilt after 0.0.1, and in what order.
   - **Data**

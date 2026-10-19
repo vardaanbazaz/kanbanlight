@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, MoreHorizontal, GitCommit } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Card } from './Card';
 import { useKanbanStore } from '../store/useKanbanStore';
 
@@ -66,20 +66,12 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
               {cards.length + deletedCardsInColumn.length}
             </span>
           </div>
-          <div className="flex items-center space-x-1">
-            <button className="p-1 hover:bg-white/50 dark:hover:bg-zinc-800/50 rounded text-slate-500 dark:text-zinc-400">
-              <GitCommit className="w-4 h-4" />
-            </button>
-            <button className="p-1 hover:bg-white/50 dark:hover:bg-zinc-800/50 rounded text-slate-500 dark:text-zinc-400">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-          </div>
         </div>
       </div>
 
       {/* Cards Container */}
       <div className="flex-1 bg-white dark:bg-zinc-900/90 border-l-2 border-r-2 border-b-2 rounded-b-lg border-slate-200 dark:border-zinc-800 p-4 space-y-3 overflow-y-auto transition-colors">
-        {cards.map((card: any) => {
+        {cards.map((card) => {
           let diffStatus: 'added' | 'modified' | 'deleted' | undefined;
           if (isDiffModeActive) {
             if (addedIds.has(card.id)) diffStatus = 'added';
@@ -89,7 +81,7 @@ export const Column: React.FC<ColumnProps> = ({ id, title, color }) => {
         })}
 
         {/* Deleted Cards (Ghosted) */}
-        {deletedCardsInColumn.map((card: any) => (
+        {deletedCardsInColumn.map((card) => (
           <Card key={`deleted-${card.id}`} card={card} diffStatus="deleted" />
         ))}
 

@@ -1,9 +1,18 @@
 import { useKanbanStore } from '../store/useKanbanStore';
 import { branchingService } from './BranchingService';
+import { parseBridgeFrame, resolveBranch, type BridgeCommand } from './bridgeProtocol';
+
+// Only a page served from this computer may reach the bridge; the hosted site never tries.
+const LOCAL_HOSTNAMES = ['localhost', '127.0.0.1'];
+
+// Writes only on change, so a bridge that stays down does not re-render the board on every retry.
+function setConnected(connected: boolean): void {
+  if (useKanbanStore.getState().isCliConnected !== connected) useKanbanStore.setState({ isCliConnected: connected });
+}
 
 export class CliSyncService {
   private socket: WebSocket | null = null;
-  private reconnectTimer: any = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private port: number;
 
   constructor(port: number = 8080) {
@@ -11,16 +20,17 @@ export class CliSyncService {
   }
 
   public connect(): void {
+    if (!LOCAL_HOSTNAMES.includes(window.location.hostname)) return;
     if (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN)) {
       return;
     }
 
     try {
-      this.socket = new WebSocket(`ws://localhost:${this.port}`);
+      this.socket = new WebSocket(`ws://127.0.0.1:${this.port}`);
 
       this.socket.onopen = () => {
         console.log(`[CliSyncService] Connected to local CLI Bridge Server on port ${this.port}`);
-        useKanbanStore.setState({ isCliConnected: true });
+        setConnected(true);
         if (this.reconnectTimer) {
           clearTimeout(this.reconnectTimer);
           this.reconnectTimer = null;
@@ -28,26 +38,29 @@ export class CliSyncService {
       };
 
       this.socket.onmessage = async (event: MessageEvent) => {
+        const result = parseBridgeFrame(typeof event.data === 'string' ? event.data : '');
+        if (!result.ok) {
+          console.warn(`[CliSyncService] Ignored a bridge message: ${result.reason}`);
+          return;
+        }
         try {
-          const data = JSON.parse(event.data);
-          console.log('[CliSyncService] Incoming CLI command payload:', data);
-          await this.handleCommand(data);
+          await this.handleCommand(result.command);
         } catch (err) {
-          console.error('[CliSyncService] Error parsing incoming command:', err);
+          console.error('[CliSyncService] Error applying a bridge command:', err);
         }
       };
 
       this.socket.onclose = () => {
-        useKanbanStore.setState({ isCliConnected: false });
+        setConnected(false);
         this.scheduleReconnect();
       };
 
       this.socket.onerror = () => {
-        useKanbanStore.setState({ isCliConnected: false });
+        setConnected(false);
         this.socket?.close();
       };
-    } catch (err) {
-      useKanbanStore.setState({ isCliConnected: false });
+    } catch {
+      setConnected(false);
       this.scheduleReconnect();
     }
   }
@@ -61,51 +74,49 @@ export class CliSyncService {
     }
   }
 
-  private async handleCommand(data: { type: string; payload: any }): Promise<void> {
+  private async handleCommand(data: BridgeCommand): Promise<void> {
     const store = useKanbanStore.getState();
 
     switch (data.type) {
       case 'SWITCH_BRANCH':
-        if (typeof data.payload === 'string') {
-          await store.switchBranch(data.payload);
+      case 'COMPARE_BRANCH': {
+        const branch = resolveBranch(data.payload, branchingService.getBranches());
+        if (!branch.ok) {
+          console.warn(`[CliSyncService] Ignored a bridge message: ${branch.reason}`);
+        } else if (data.type === 'SWITCH_BRANCH') {
+          await branchingService.switchBranch(branch.id);
+        } else {
+          await store.startBranchDiff(branch.id);
         }
         break;
+      }
 
-      case 'CREATE_BRANCH':
-        if (data.payload?.name) {
-          const newBranch = await branchingService.createBranch(data.payload.name, store.activeBranchId || 'main');
-          if (data.payload.checkout) {
-            await store.switchBranch(newBranch.id);
-          }
+      case 'CREATE_BRANCH': {
+        const newBranch = await branchingService.createBranch(data.payload.name, store.activeBranchId || 'main');
+        if (data.payload.checkout) {
+          await store.switchBranch(newBranch.id);
         }
         break;
-
-      case 'COMPARE_BRANCH':
-        if (typeof data.payload === 'string') {
-          await store.startBranchDiff(data.payload);
-        }
-        break;
+      }
 
       case 'EXIT_DIFF':
         store.exitDiffMode();
         break;
 
       case 'CREATE_CARD':
-        if (data.payload?.title) {
-          await store.createCard(
-            data.payload.title,
-            data.payload.columnId || 'backlog',
-            {
-              description: data.payload.description || '',
-              priority: data.payload.priority || 'medium',
-              assignee: data.payload.assignee || 'You',
-            }
-          );
-        }
+        await store.createCard(
+          data.payload.title,
+          data.payload.columnId || 'backlog',
+          {
+            description: data.payload.description || '',
+            priority: data.payload.priority || 'medium',
+            assignee: data.payload.assignee || 'You',
+          }
+        );
         break;
 
-      default:
-        console.log('[CliSyncService] Unhandled command type:', data.type);
+      case 'HANDSHAKE_ACK':
+        break;
     }
   }
 
@@ -118,7 +129,7 @@ export class CliSyncService {
       this.socket.close();
       this.socket = null;
     }
-    useKanbanStore.setState({ isCliConnected: false });
+    setConnected(false);
   }
 }
 

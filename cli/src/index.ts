@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
+import { Command, InvalidArgumentError, Option } from 'commander';
 import chalk from 'chalk';
 import { startCliServer } from './server';
 import { 
@@ -15,52 +15,70 @@ const program = new Command();
 
 program
   .name('kb')
-  .description('KanbanLight CLI - Git-paradigm project management')
-  .version('0.0.1');
+  .description('Control an open KanbanLight board from the terminal')
+  .version('0.0.2')
+  .allowExcessArguments(false);
+
+function parsePort(value: string): number {
+  const port = Number(value);
+  if (!/^\d+$/.test(value) || port < 1 || port > 65535) throw new InvalidArgumentError('not a valid port');
+  return port;
+}
+
+// An empty or whitespace-only value is a usage error (exit 1), never a message to the board.
+function required(value: string, what: string): string {
+  if (!value.trim()) program.error(`Enter a ${what}.`);
+  return value;
+}
 
 // Local Bridge Server command
 program
   .command('serve')
   .alias('start')
-  .description('Start local WebSocket bridge server to sync with live React UI')
-  .option('-p, --port <port>', 'Server port', '8080')
-  .action((options) => {
-    const port = parseInt(options.port || '8080');
-    startCliServer(port);
+  .description('Start the bridge that relays commands to open KanbanLight tabs (port 8080)')
+  .option('-p, --port <port>', 'Server port', parsePort, 8080)
+  .action((options: { port: number }) => {
+    startCliServer(options.port);
   });
 
 // Board & Branch management commands
 program
-  .command('checkout <target>')
-  .alias('switch')
-  .description('Switch active branch or board')
-  .action(switchBoard);
+  .command('switch <branch>')
+  .alias('checkout')
+  .description('Switch the board to another branch')
+  .action((branch: string) => switchBoard(required(branch, 'branch name')));
 
 // Card management commands
 program
   .command('add <title>')
   .description('Create a new card')
   .option('-d, --description <desc>', 'Card description')
-  .option('-p, --priority <priority>', 'Priority (low|medium|high)', 'medium')
+  .addOption(new Option('-p, --priority <priority>', 'Priority').choices(['low', 'medium', 'high']).default('medium'))
   .option('-a, --assignee <assignee>', 'Assignee name')
-  .option('-c, --column <column>', 'Target column', 'backlog')
-  .action(createCard);
+  .addOption(
+    new Option('-c, --column <column>', 'Target column')
+      .choices(['backlog', 'todo', 'in-progress', 'review', 'done'])
+      .default('backlog')
+  )
+  .action((title: string, options: Parameters<typeof createCard>[1]) =>
+    createCard(required(title, 'card title'), options)
+  );
 
 program
   .command('branch <name>')
-  .description('Create a new board branch')
-  .option('-b, --checkout', 'Checkout branch after creation')
-  .action(createBranch);
+  .description('Create a branch from the current branch and switch to it')
+  .option('-b, --checkout', '(no effect: the board always switches to the new branch)')
+  .action((name: string, options: { checkout?: boolean }) => createBranch(required(name, 'branch name'), options));
 
 program
   .command('compare <branch>')
   .alias('diff')
-  .description('Compare active branch against target branch in Live UI')
-  .action(compareBranch);
+  .description('Compare the current branch with <branch> on the board')
+  .action((branch: string) => compareBranch(required(branch, 'branch name')));
 
 program
   .command('exit-diff')
-  .description('Exit Visual Diff mode in Live UI')
+  .description('Stop comparing')
   .action(exitDiff);
 
 // Error handling

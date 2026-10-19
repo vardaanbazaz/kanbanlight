@@ -1,14 +1,13 @@
 import WebSocket from 'ws';
-import chalk from 'chalk';
 
 export interface BridgeMessage {
   type: string;
-  payload: any;
+  payload: unknown;
 }
 
 export function sendToBridge(message: BridgeMessage, port: number = 8080): Promise<boolean> {
   return new Promise((resolve) => {
-    const ws = new WebSocket(`ws://localhost:${port}`);
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
     const timeout = setTimeout(() => {
       ws.terminate();
       resolve(false);

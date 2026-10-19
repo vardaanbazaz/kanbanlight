@@ -12,9 +12,31 @@ export interface BoardBranch {
   description?: string;
 }
 
+type SavedBranches = { branches: [string, BoardBranch][]; currentBranch: string };
+
+// The stored list must be [id, { id, name }] pairs with text ids and names, and a text pointer.
+function readSavedBranches(saved: string): SavedBranches | null {
+  try {
+    const data = JSON.parse(saved);
+    const isEntry = (entry: unknown) =>
+      Array.isArray(entry) &&
+      typeof entry[0] === 'string' &&
+      typeof entry[1]?.id === 'string' &&
+      typeof entry[1]?.name === 'string';
+    if (!Array.isArray(data?.branches) || !data.branches.every(isEntry) || typeof data.currentBranch !== 'string') {
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 class BranchingService {
   private branches: Map<string, BoardBranch> = new Map();
   private currentBranch: string = 'main';
+  // Set when the stored list cannot be read. Nothing is saved while it is set, so the stored value is kept.
+  loadError = false;
 
   constructor() {
     this.loadBranches();
@@ -23,27 +45,58 @@ class BranchingService {
   private loadBranches(): void {
     const saved = localStorage.getItem('kanban-branches');
     if (saved) {
-      const data = JSON.parse(saved);
+      const data = readSavedBranches(saved);
+      if (!data) {
+        this.loadError = true;
+        return;
+      }
       this.branches = new Map(data.branches);
       this.currentBranch = data.currentBranch || 'main';
+      if (!this.branches.has(this.currentBranch)) this.keepUnknownPointer();
     } else {
-      // Create default main branch
-      const mainBranch: BoardBranch = {
-        id: 'main',
-        name: 'main',
-        parentId: null,
-        boardSnapshot: null,
-        createdAt: Date.now(),
-        lastCommit: 'init',
-        author: 'system',
-        description: 'Main production branch'
-      };
-      this.branches.set('main', mainBranch);
+      this.branches.set('main', this.createMainBranch());
       this.saveBranches();
     }
   }
 
+  private createMainBranch(): BoardBranch {
+    return {
+      id: 'main',
+      name: 'main',
+      parentId: null,
+      boardSnapshot: null,
+      createdAt: Date.now(),
+      lastCommit: 'init',
+      author: 'system',
+      description: 'Default branch'
+    };
+  }
+
+  // An earlier version could point at a branch that is not listed. List it, so its working copy
+  // belongs to a visible branch and switching to main loads main's own snapshot. A missing main is recreated as main.
+  private keepUnknownPointer(): void {
+    if (this.currentBranch === 'main') {
+      this.branches.set('main', this.createMainBranch());
+      this.saveBranches();
+      return;
+    }
+    const names = new Set(this.getBranches().map((branch) => branch.name));
+    let name = 'recovered';
+    for (let n = 2; names.has(name); n++) name = `recovered-${n}`;
+    this.branches.set(this.currentBranch, {
+      id: this.currentBranch,
+      name,
+      parentId: 'main',
+      boardSnapshot: null,
+      createdAt: Date.now(),
+      lastCommit: this.generateCommitId(),
+      author: 'system',
+    });
+    this.saveBranches();
+  }
+
   private saveBranches(): void {
+    if (this.loadError) return;
     localStorage.setItem('kanban-branches', JSON.stringify({
       branches: Array.from(this.branches.entries()),
       currentBranch: this.currentBranch

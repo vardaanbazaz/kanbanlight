@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { sendToBridge } from '../services/BridgeClient';
 
-const BRIDGE_DOWN_MESSAGE = '⚠️ CLI Bridge server not running. Run "kb serve" to sync with Live UI.';
+const BRIDGE_DOWN_MESSAGE = 'Bridge not running on 127.0.0.1:8080. Start it in another terminal with: kb serve';
 
 export async function switchBoard(boardName: string) {
   const spinner = ora(`Switching to "${boardName}"...`).start();
@@ -14,13 +14,14 @@ export async function switchBoard(boardName: string) {
     });
 
     if (sent) {
-      spinner.succeed(chalk.green(`✅ Switched to branch "${boardName}" (Live UI Synced)`));
+      spinner.succeed(chalk.green(`Sent "switch ${boardName}" to the bridge. The board does not confirm commands yet.`));
     } else {
       spinner.fail(chalk.yellow(BRIDGE_DOWN_MESSAGE));
       process.exitCode = 1;
     }
   } catch (error) {
-    spinner.fail(chalk.red(`❌ Failed to switch branch: ${(error as Error).message}`));
+    spinner.fail(chalk.red(`Failed to switch branch: ${(error as Error).message}`));
+    process.exitCode = 1;
   }
 }
 
@@ -45,13 +46,14 @@ export async function createCard(title: string, options: {
     });
 
     if (sent) {
-      spinner.succeed(chalk.green(`✅ Created card "${title}" (Live UI Synced)`));
+      spinner.succeed(chalk.green(`Sent "add ${title}" to the bridge. The board does not confirm commands yet.`));
     } else {
       spinner.fail(chalk.yellow(BRIDGE_DOWN_MESSAGE));
       process.exitCode = 1;
     }
   } catch (error) {
-    spinner.fail(chalk.red(`❌ Failed to create card: ${(error as Error).message}`));
+    spinner.fail(chalk.red(`Failed to create card: ${(error as Error).message}`));
+    process.exitCode = 1;
   }
 }
 
@@ -64,20 +66,20 @@ export async function createBranch(name: string, options: { checkout?: boolean }
       payload: { name, checkout: options.checkout }
     });
 
-    if (!sent) {
+    // -b is accepted but sends nothing extra: the board always switches to the new branch.
+    if (sent) {
+      spinner.succeed(
+        chalk.green(
+          `Sent "branch ${name}" to the bridge. The board creates it from the current branch and switches to it. The board does not confirm commands yet.`
+        )
+      );
+    } else {
       spinner.fail(chalk.yellow(BRIDGE_DOWN_MESSAGE));
       process.exitCode = 1;
-      return;
-    }
-
-    if (options.checkout) {
-      await sendToBridge({ type: 'SWITCH_BRANCH', payload: name });
-      spinner.succeed(chalk.green(`✅ Created and checked out branch "${name}" (Live UI Synced)`));
-    } else {
-      spinner.succeed(chalk.green(`✅ Created branch "${name}" (Live UI Synced)`));
     }
   } catch (error) {
-    spinner.fail(chalk.red(`❌ Failed to create branch: ${(error as Error).message}`));
+    spinner.fail(chalk.red(`Failed to create branch: ${(error as Error).message}`));
+    process.exitCode = 1;
   }
 }
 
@@ -91,13 +93,14 @@ export async function compareBranch(targetBranch: string) {
     });
 
     if (sent) {
-      spinner.succeed(chalk.green(`✅ Activated Visual Diff mode against "${targetBranch}" in Live UI`));
+      spinner.succeed(chalk.green(`Sent "compare ${targetBranch}" to the bridge. The board does not confirm commands yet.`));
     } else {
       spinner.fail(chalk.yellow(BRIDGE_DOWN_MESSAGE));
       process.exitCode = 1;
     }
   } catch (error) {
-    spinner.fail(chalk.red(`❌ Failed to compare branch: ${(error as Error).message}`));
+    spinner.fail(chalk.red(`Failed to compare branch: ${(error as Error).message}`));
+    process.exitCode = 1;
   }
 }
 
@@ -111,12 +114,13 @@ export async function exitDiff() {
     });
 
     if (sent) {
-      spinner.succeed(chalk.green('✅ Exited Visual Diff mode in Live UI'));
+      spinner.succeed(chalk.green('Sent "exit-diff" to the bridge. The board does not confirm commands yet.'));
     } else {
       spinner.fail(chalk.yellow(BRIDGE_DOWN_MESSAGE));
       process.exitCode = 1;
     }
   } catch (error) {
-    spinner.fail(chalk.red(`❌ Failed to exit diff mode: ${(error as Error).message}`));
+    spinner.fail(chalk.red(`Failed to exit diff mode: ${(error as Error).message}`));
+    process.exitCode = 1;
   }
 }

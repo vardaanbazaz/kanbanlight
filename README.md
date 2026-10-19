@@ -2,7 +2,7 @@
 
 A Kanban board in the browser that borrows a few ideas from Git: create branches of a board, switch between them, and compare the current branch with another one. Board data is stored in your browser; there is no backend.
 
-Version 0.0.1, an early build. Live demo: https://kanbanlight.vercel.app
+Version 0.0.2, an early build. Live demo: https://kanbanlight.vercel.app
 
 An optional Node.js CLI can send commands to an open board over a local WebSocket bridge. It needs the local setup below and is meant for the web app running locally.
 

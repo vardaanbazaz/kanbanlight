@@ -1,6 +1,6 @@
 # KanbanLight CLI
 
-Version 0.0.1. Early development.
+Version 0.0.2. Early development.
 
 A small command-line tool that sends commands to an open KanbanLight board through a local WebSocket bridge. The CLI does not store any data itself. Every command except `serve` sends a message to the bridge, and the bridge passes it on to the web app.
 
@@ -45,7 +45,7 @@ Starts the WebSocket bridge. The default port is 8080. The bridge forwards every
 
 `-p, --port` takes a whole number from 1 to 65535; anything else is rejected with exit code 1. `serve` is the only command with a port option. The other CLI commands always connect to port 8080, and so does the web app, so in practice the bridge must run on 8080.
 
-The bridge listens on `127.0.0.1` only, so other computers cannot reach it. It accepts the CLI and the web app served on `http://localhost:5173` or `http://127.0.0.1:5173` (`npm run dev`) and on port 4173 (`npm run preview`); any other web page is refused. Use the default dev port: if Vite falls back to another port, the bridge refuses the page. Messages are limited to 64 KiB, and the bridge prints only each message's type, never its contents.
+The bridge listens on `127.0.0.1` only, so other computers cannot reach it. It refuses web pages except the web app served on `http://localhost:5173` or `http://127.0.0.1:5173` (`npm run dev`) and on port 4173 (`npm run preview`). Any program on this computer can still connect; the bridge has no authentication. Use the default dev port: if Vite falls back to another port, the bridge refuses the page. Messages are limited to 64 KiB, and the bridge prints only each message's type field.
 
 The bridge has no authentication: any program on this computer can connect to it, and it sends card text to every connected program. Stop it (`Ctrl+C`) when not in use.
 
@@ -70,7 +70,7 @@ Any other priority or column is rejected and the allowed values are listed. An e
 npx tsx src/index.ts branch <name> [-b]
 ```
 
-Creates a branch from the current branch, and the web app switches to it straight away. `-b` (`--checkout`) is still accepted but has no effect, since the board always switches to the new branch.
+Creates a branch from the current branch, and the web app switches to it straight away. `-b` (`--checkout`) is still accepted but makes no difference, since the board always switches to the new branch.
 
 ### `switch <branch>` (alias `checkout`)
 

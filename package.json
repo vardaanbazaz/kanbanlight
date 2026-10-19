@@ -1,7 +1,7 @@
 {
   "name": "kanbanlight",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Kanban board in the browser with Git-style branches.",
   "author": "Vardaan Bajaj",
   "license": "MIT",

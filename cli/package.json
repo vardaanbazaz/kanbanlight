@@ -1,7 +1,7 @@
 {
   "name": "kanban-cli",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Command-line tool that sends commands to an open KanbanLight board over a local WebSocket bridge.",
   "main": "dist/index.js",
   "bin": {

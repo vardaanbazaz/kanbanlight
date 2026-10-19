@@ -16,7 +16,7 @@ const program = new Command();
 program
   .name('kb')
   .description('Control an open KanbanLight board from the terminal')
-  .version('0.0.1')
+  .version('0.0.2')
   .allowExcessArguments(false);
 
 function parsePort(value: string): number {

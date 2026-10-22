@@ -64,21 +64,13 @@ describe('stored records are checked before use', () => {
     ['a time that is not a number', checkBoard, { ...valid.board, createdAt: '1' }],
     ['a time that is not finite', checkBoard, { ...valid.board, updatedAt: Infinity }],
     ['a blank branch name', checkBranch, { ...valid.branch, name: '   ' }],
-    ['a branch name with outer spaces', checkBranch, { ...valid.branch, name: ' main' }],
-    ['a branch name over 100 characters', checkBranch, { ...valid.branch, name: 'b'.repeat(101) }],
     ['a branch without a board', checkBranch, { ...valid.branch, boardId: undefined }],
     ['a head without a branch', checkHead, { boardId: 'board-1' }],
     ['a card title that is an object', checkCard, { ...valid.card, title: { text: 'x' } }],
-    ['an empty card title', checkCard, { ...valid.card, title: '' }],
-    ['a card title over 200 characters', checkCard, { ...valid.card, title: 't'.repeat(201) }],
-    ['a description over 20,000 characters', checkCard, { ...valid.card, description: 'd'.repeat(20_001) }],
     ['a description that is an array', checkCard, { ...valid.card, description: ['x'] }],
-    ['an assignee over 100 characters', checkCard, { ...valid.card, assignee: 'a'.repeat(101) }],
-    ['a blank assignee', checkCard, { ...valid.card, assignee: ' ' }],
     ['an unknown priority', checkCard, { ...valid.card, priority: 'urgent' }],
     ['an unknown column', checkCard, { ...valid.card, columnId: 'nowhere' }],
     ['a tag that is not text', checkCard, { ...valid.card, tags: [1] }],
-    ['the same tag twice', checkCard, { ...valid.card, tags: ['ui', 'ui'] }],
     ['a card without a board', checkCard, { ...valid.card, boardId: undefined }],
     ['a card without a branch', checkCard, Object.fromEntries(Object.entries(valid.card).filter(([key]) => key !== 'branchId'))],
     ['three parents', checkCommit, { ...valid.commit, parents: ['a', 'b', 'c'] }],
@@ -94,6 +86,20 @@ describe('stored records are checked before use', () => {
     ['an op with neither before nor after', checkOpEntry, { ...valid.op, before: null, after: null }],
   ])('rejects %s', (_name, check: (value: unknown) => { ok: boolean }, value) => {
     expect(check(value).ok).toBe(false);
+  });
+
+  it('accepts every value the 0.0.2 web app could store, whatever its length or spacing', () => {
+    const old = {
+      ...valid.card,
+      title: '  ' + 't'.repeat(500) + '  ',
+      description: 'd'.repeat(50_000),
+      assignee: 'Unassigned',
+      tags: [...Array.from({ length: 25 }, (_, n) => `tag ${n}`), 'x'.repeat(60), 'tag 0'],
+    };
+    expect(checkCard(old)).toEqual({ ok: true, value: old });
+    expect(checkCard({ ...valid.card, title: '', assignee: '' }).ok).toBe(true);
+    expect(checkBranch({ ...valid.branch, name: ' ' + 'b'.repeat(300) }).ok).toBe(true);
+    expect(checkBranch({ ...valid.branch, id: 'branch-' + 'x'.repeat(200) }).ok).toBe(true);
   });
 
   it('names the problem without repeating the stored content', () => {
@@ -117,6 +123,11 @@ describe('command inputs are checked', () => {
     ['an unknown field', { title: 'x', owner: 'y' }],
     ['an unknown column', { title: 'x', columnId: 'nowhere' }],
     ['a description over 20,000 characters', { title: 'x', description: 'd'.repeat(20_001) }],
+    ['a title over 200 characters', { title: 't'.repeat(201) }],
+    ['an assignee over 100 characters', { title: 'x', assignee: 'a'.repeat(101) }],
+    ['21 tags', { title: 'x', tags: Array.from({ length: 21 }, (_, n) => `t${n}`) }],
+    ['a tag over 50 characters', { title: 'x', tags: ['t'.repeat(51)] }],
+    ['the same tag twice once trimmed', { title: 'x', tags: ['ui', ' ui '] }],
   ])('rejects a card input with %s', (_name, value) => {
     expect(checkCardInput(value).ok).toBe(false);
   });

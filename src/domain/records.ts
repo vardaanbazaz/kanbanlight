@@ -1,5 +1,8 @@
 // Checks for every record read from storage and for command inputs. Pure, so every storage adapter
 // and every command source gets the same rules. Reasons name the problem, never the stored content.
+// Strict on new input, tolerant of old data: stored-record checks reject corruption (wrong types,
+// missing ids, unknown columns or priorities), never a length or spacing that 0.0.2 could have stored.
+// The limits apply to command inputs only.
 
 import {
   COLUMN_IDS,
@@ -21,8 +24,8 @@ import {
 
 export type Checked<T> = { ok: true; value: T } | { ok: false; reason: string };
 
-// Limits shared with the 0.0.2 bridge checks, so old and new agree.
-export const LIMITS = { id: 100, title: 200, description: 20_000, assignee: 100, branchName: 100, tags: 20, tag: 50 };
+// Limits for command inputs. Title, description, assignee and branch name match the 0.0.2 bridge checks.
+export const LIMITS = { title: 200, description: 20_000, assignee: 100, branchName: 100, tags: 20, tag: 50 };
 
 type Fields = Record<string, unknown>;
 type Rule = (value: unknown) => string | null;
@@ -30,15 +33,21 @@ type Rule = (value: unknown) => string | null;
 const isObject = (value: unknown): value is Fields =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const text = (min: number, max: number, trimmed = false): Rule => (value) => {
+// Input text, checked before trimming.
+const text = (min: number, max: number): Rule => (value) => {
   if (typeof value !== 'string') return 'must be text';
   if (value.length < min || value.length > max) return `must be ${min} to ${max} characters`;
   if (min > 0 && value.trim() === '') return 'must not be blank';
-  if (trimmed && value !== value.trim()) return 'must not start or end with spaces';
   return null;
 };
 
-const id = text(1, LIMITS.id);
+// Stored values: type checks only, so data written by 0.0.2 always reads back.
+const anyText: Rule = (value) => (typeof value === 'string' ? null : 'must be text');
+const nonEmptyText: Rule = (value) =>
+  typeof value === 'string' && value.trim() !== '' ? null : 'must be text that is not blank';
+const textList: Rule = (value) =>
+  Array.isArray(value) && value.every((entry) => typeof entry === 'string') ? null : 'must be a list of text';
+const id = nonEmptyText;
 const time: Rule = (value) => (typeof value === 'number' && Number.isFinite(value) ? null : 'must be a finite number');
 const flag: Rule = (value) => (typeof value === 'boolean' ? null : 'must be true or false');
 const oneOf = (options: readonly string[]): Rule => (value) =>
@@ -80,23 +89,23 @@ function record<T>(kind: string, required: Record<string, Rule>, optional: Recor
 
 const cardRules = {
   id,
-  title: text(1, LIMITS.title, true),
-  description: text(0, LIMITS.description),
+  title: anyText,
+  description: anyText,
   priority: oneOf(PRIORITIES),
-  tags: distinctList(LIMITS.tags, text(1, LIMITS.tag, true)),
+  tags: textList,
   columnId: oneOf(COLUMN_IDS),
   position: time,
   createdAt: time,
   updatedAt: time,
 };
-const cardOptional = { assignee: text(1, LIMITS.assignee, true) };
+const cardOptional = { assignee: anyText };
 
-export const checkBoard = record<BoardRecord>('board', { id, title: text(1, LIMITS.title, true), createdAt: time, updatedAt: time });
+export const checkBoard = record<BoardRecord>('board', { id, title: anyText, createdAt: time, updatedAt: time });
 
 export const checkBranch = record<BranchRecord>('branch', {
   id,
   boardId: id,
-  name: text(1, LIMITS.branchName, true),
+  name: nonEmptyText,
   createdAt: time,
   createdFrom: nullable(id),
 });
@@ -109,7 +118,7 @@ export const checkCard = record<CardRecord>('card', { ...cardRules, boardId: id,
 
 export const checkColumn = record<ColumnRecord>('column', {
   id: oneOf(COLUMN_IDS),
-  title: text(1, 50, true),
+  title: anyText,
   position: time,
 });
 

@@ -1,0 +1,1489 @@
+{
+ "legacy": {
+  "indexedDB": {
+   "boards": [
+    {
+     "id": "default-board",
+     "title": "Main Board",
+     "columns": [
+      {
+       "id": "backlog",
+       "title": "Backlog",
+       "color": "slate",
+       "position": 0,
+       "cards": []
+      },
+      {
+       "id": "todo",
+       "title": "To Do",
+       "color": "blue",
+       "position": 1,
+       "cards": []
+      },
+      {
+       "id": "in-progress",
+       "title": "In Progress",
+       "color": "amber",
+       "position": 2,
+       "cards": []
+      },
+      {
+       "id": "review",
+       "title": "Review",
+       "color": "purple",
+       "position": 3,
+       "cards": []
+      },
+      {
+       "id": "done",
+       "title": "Done",
+       "color": "emerald",
+       "position": 4,
+       "cards": []
+      }
+     ],
+     "createdAt": 1700000000000,
+     "updatedAt": 1700000000000
+    }
+   ],
+   "cards": [
+    {
+     "id": "card-1700000001000-4qh0",
+     "title": "On main",
+     "description": "",
+     "priority": "medium",
+     "assignee": "You",
+     "tags": [],
+     "columnId": "todo",
+     "position": 0,
+     "createdAt": 1700000001000,
+     "updatedAt": 1700000001000,
+     "boardId": "default-board"
+    },
+    {
+     "id": "card-1700000003000-gies",
+     "title": "On feature",
+     "description": "",
+     "priority": "medium",
+     "assignee": "You",
+     "tags": [],
+     "columnId": "backlog",
+     "position": 0,
+     "createdAt": 1700000003000,
+     "updatedAt": 1700000003000,
+     "boardId": "default-board"
+    }
+   ],
+   "events": [
+    {
+     "type": "CARD_CREATED",
+     "payload": {
+      "id": "card-1700000001000-4qh0",
+      "title": "On main",
+      "description": "",
+      "priority": "medium",
+      "assignee": "You",
+      "tags": [],
+      "columnId": "todo",
+      "position": 0,
+      "createdAt": 1700000001000,
+      "updatedAt": 1700000001000
+     },
+     "userId": "user-000d57ae6",
+     "boardId": "default-board",
+     "id": "1700000001000",
+     "timestamp": 1700000001000
+    },
+    {
+     "type": "CARD_CREATED",
+     "payload": {
+      "id": "card-1700000003000-gies",
+      "title": "On feature",
+      "description": "",
+      "priority": "medium",
+      "assignee": "You",
+      "tags": [],
+      "columnId": "backlog",
+      "position": 0,
+      "createdAt": 1700000003000,
+      "updatedAt": 1700000003000
+     },
+     "userId": "user-000d57ae6",
+     "boardId": "default-board",
+     "id": "1700000003000",
+     "timestamp": 1700000003000
+    }
+   ],
+   "plugins": [],
+   "snapshots": [
+    {
+     "id": "snapshot-branch-1700000002000-1700000002000",
+     "boardId": "default-board",
+     "branchId": "branch-1700000002000",
+     "data": {
+      "cards": [
+       {
+        "id": "card-1700000001000-4qh0",
+        "title": "On main",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "todo",
+        "position": 0,
+        "createdAt": 1700000001000,
+        "updatedAt": 1700000001000
+       }
+      ],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000001000-4qh0",
+         "title": "On main",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "todo",
+         "position": 0,
+         "createdAt": 1700000001000,
+         "updatedAt": 1700000001000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000001000",
+        "timestamp": 1700000001000
+       }
+      ],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000002000,
+     "description": "Snapshot for branch branch-1700000002000 at 3:43:22 AM"
+    },
+    {
+     "id": "snapshot-branch-1700000002000-1700000004000",
+     "boardId": "default-board",
+     "branchId": "branch-1700000002000",
+     "data": {
+      "cards": [
+       {
+        "id": "card-1700000001000-4qh0",
+        "title": "On main",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "todo",
+        "position": 0,
+        "createdAt": 1700000001000,
+        "updatedAt": 1700000001000
+       },
+       {
+        "id": "card-1700000003000-gies",
+        "title": "On feature",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "backlog",
+        "position": 0,
+        "createdAt": 1700000003000,
+        "updatedAt": 1700000003000
+       }
+      ],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000001000-4qh0",
+         "title": "On main",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "todo",
+         "position": 0,
+         "createdAt": 1700000001000,
+         "updatedAt": 1700000001000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000001000",
+        "timestamp": 1700000001000
+       },
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000003000-gies",
+         "title": "On feature",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "backlog",
+         "position": 0,
+         "createdAt": 1700000003000,
+         "updatedAt": 1700000003000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000003000",
+        "timestamp": 1700000003000
+       }
+      ],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000004000,
+     "description": "Snapshot for branch branch-1700000002000 at 3:43:24 AM"
+    },
+    {
+     "id": "snapshot-branch-1700000002000-1700000010000",
+     "boardId": "default-board",
+     "branchId": "branch-1700000002000",
+     "data": {
+      "cards": [
+       {
+        "id": "card-1700000001000-4qh0",
+        "title": "On main",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "todo",
+        "position": 0,
+        "createdAt": 1700000001000,
+        "updatedAt": 1700000001000
+       },
+       {
+        "id": "card-1700000003000-gies",
+        "title": "On feature",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "backlog",
+        "position": 0,
+        "createdAt": 1700000003000,
+        "updatedAt": 1700000003000
+       }
+      ],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000001000-4qh0",
+         "title": "On main",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "todo",
+         "position": 0,
+         "createdAt": 1700000001000,
+         "updatedAt": 1700000001000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000001000",
+        "timestamp": 1700000001000
+       },
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000003000-gies",
+         "title": "On feature",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "backlog",
+         "position": 0,
+         "createdAt": 1700000003000,
+         "updatedAt": 1700000003000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000003000",
+        "timestamp": 1700000003000
+       }
+      ],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000010000,
+     "description": "Snapshot for branch branch-1700000002000 at 3:43:30 AM"
+    },
+    {
+     "id": "snapshot-branch-1700000004000-1700000004000",
+     "boardId": "default-board",
+     "branchId": "branch-1700000004000",
+     "data": {
+      "cards": [
+       {
+        "id": "card-1700000001000-4qh0",
+        "title": "On main",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "todo",
+        "position": 0,
+        "createdAt": 1700000001000,
+        "updatedAt": 1700000001000
+       },
+       {
+        "id": "card-1700000003000-gies",
+        "title": "On feature",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "backlog",
+        "position": 0,
+        "createdAt": 1700000003000,
+        "updatedAt": 1700000003000
+       }
+      ],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000001000-4qh0",
+         "title": "On main",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "todo",
+         "position": 0,
+         "createdAt": 1700000001000,
+         "updatedAt": 1700000001000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000001000",
+        "timestamp": 1700000001000
+       },
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000003000-gies",
+         "title": "On feature",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "backlog",
+         "position": 0,
+         "createdAt": 1700000003000,
+         "updatedAt": 1700000003000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000003000",
+        "timestamp": 1700000003000
+       }
+      ],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000004000,
+     "description": "Snapshot for branch branch-1700000004000 at 3:43:24 AM"
+    },
+    {
+     "id": "snapshot-branch-1700000004000-1700000006000",
+     "boardId": "default-board",
+     "branchId": "branch-1700000004000",
+     "data": {
+      "cards": [
+       {
+        "id": "card-1700000001000-4qh0",
+        "title": "On main",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "todo",
+        "position": 0,
+        "createdAt": 1700000001000,
+        "updatedAt": 1700000001000
+       },
+       {
+        "id": "card-1700000003000-gies",
+        "title": "On feature",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "backlog",
+        "position": 0,
+        "createdAt": 1700000003000,
+        "updatedAt": 1700000003000
+       },
+       {
+        "id": "card-1700000005000-7vrr",
+        "title": "On feature-ui",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "review",
+        "position": 0,
+        "createdAt": 1700000005000,
+        "updatedAt": 1700000005000
+       }
+      ],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000001000-4qh0",
+         "title": "On main",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "todo",
+         "position": 0,
+         "createdAt": 1700000001000,
+         "updatedAt": 1700000001000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000001000",
+        "timestamp": 1700000001000
+       },
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000003000-gies",
+         "title": "On feature",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "backlog",
+         "position": 0,
+         "createdAt": 1700000003000,
+         "updatedAt": 1700000003000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000003000",
+        "timestamp": 1700000003000
+       },
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000005000-7vrr",
+         "title": "On feature-ui",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "review",
+         "position": 0,
+         "createdAt": 1700000005000,
+         "updatedAt": 1700000005000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000005000",
+        "timestamp": 1700000005000
+       }
+      ],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000006000,
+     "description": "Snapshot for branch branch-1700000004000 at 3:43:26 AM"
+    },
+    {
+     "id": "snapshot-branch-1700000004000-1700000011000",
+     "boardId": "default-board",
+     "branchId": "branch-1700000004000",
+     "data": {
+      "cards": [
+       {
+        "id": "card-1700000001000-4qh0",
+        "title": "On main",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "todo",
+        "position": 0,
+        "createdAt": 1700000001000,
+        "updatedAt": 1700000001000
+       },
+       {
+        "id": "card-1700000003000-gies",
+        "title": "On feature",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "backlog",
+        "position": 0,
+        "createdAt": 1700000003000,
+        "updatedAt": 1700000003000
+       },
+       {
+        "id": "card-1700000005000-7vrr",
+        "title": "On feature-ui",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "review",
+        "position": 0,
+        "createdAt": 1700000005000,
+        "updatedAt": 1700000005000
+       }
+      ],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000001000-4qh0",
+         "title": "On main",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "todo",
+         "position": 0,
+         "createdAt": 1700000001000,
+         "updatedAt": 1700000001000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000001000",
+        "timestamp": 1700000001000
+       },
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000003000-gies",
+         "title": "On feature",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "backlog",
+         "position": 0,
+         "createdAt": 1700000003000,
+         "updatedAt": 1700000003000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000003000",
+        "timestamp": 1700000003000
+       },
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000005000-7vrr",
+         "title": "On feature-ui",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "review",
+         "position": 0,
+         "createdAt": 1700000005000,
+         "updatedAt": 1700000005000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000005000",
+        "timestamp": 1700000005000
+       }
+      ],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000011000,
+     "description": "Snapshot for branch branch-1700000004000 at 3:43:31 AM"
+    },
+    {
+     "id": "snapshot-main-1700000000000",
+     "boardId": "default-board",
+     "branchId": "main",
+     "data": {
+      "cards": [],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000000000,
+     "description": "Snapshot for branch main at 3:43:20 AM"
+    },
+    {
+     "id": "snapshot-main-1700000002000",
+     "boardId": "default-board",
+     "branchId": "main",
+     "data": {
+      "cards": [
+       {
+        "id": "card-1700000001000-4qh0",
+        "title": "On main",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "todo",
+        "position": 0,
+        "createdAt": 1700000001000,
+        "updatedAt": 1700000001000
+       }
+      ],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000001000-4qh0",
+         "title": "On main",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "todo",
+         "position": 0,
+         "createdAt": 1700000001000,
+         "updatedAt": 1700000001000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000001000",
+        "timestamp": 1700000001000
+       }
+      ],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000002000,
+     "description": "Snapshot for branch main at 3:43:22 AM"
+    },
+    {
+     "id": "snapshot-main-1700000009000",
+     "boardId": "default-board",
+     "branchId": "main",
+     "data": {
+      "cards": [
+       {
+        "id": "card-1700000001000-4qh0",
+        "title": "Edited on main",
+        "description": "",
+        "priority": "medium",
+        "assignee": "You",
+        "tags": [],
+        "columnId": "todo",
+        "position": 0,
+        "createdAt": 1700000001000,
+        "updatedAt": 1700000007000
+       }
+      ],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [
+       {
+        "type": "CARD_CREATED",
+        "payload": {
+         "id": "card-1700000001000-4qh0",
+         "title": "On main",
+         "description": "",
+         "priority": "medium",
+         "assignee": "You",
+         "tags": [],
+         "columnId": "todo",
+         "position": 0,
+         "createdAt": 1700000001000,
+         "updatedAt": 1700000001000
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000001000",
+        "timestamp": 1700000001000
+       },
+       {
+        "type": "CARD_UPDATED",
+        "payload": {
+         "cardId": "card-1700000001000-4qh0",
+         "updates": {
+          "title": "Edited on main"
+         }
+        },
+        "userId": "user-000d57ae6",
+        "boardId": "default-board",
+        "id": "1700000007000",
+        "timestamp": 1700000007000
+       }
+      ],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000009000,
+     "description": "Snapshot for branch main at 3:43:29 AM"
+    }
+   ],
+   "users": []
+  },
+  "localStorage": {
+   "kanban-branches": "{\"branches\":[[\"main\",{\"id\":\"main\",\"name\":\"main\",\"parentId\":null,\"boardSnapshot\":null,\"createdAt\":1700000000000,\"lastCommit\":\"init\",\"author\":\"system\",\"description\":\"Default branch\"}],[\"branch-1700000002000\",{\"id\":\"branch-1700000002000\",\"name\":\"feature\",\"parentId\":\"main\",\"boardSnapshot\":{\"id\":\"default-board\",\"title\":\"Main Board\",\"columns\":[{\"id\":\"backlog\",\"title\":\"Backlog\",\"color\":\"slate\",\"position\":0,\"cards\":[]},{\"id\":\"todo\",\"title\":\"To Do\",\"color\":\"blue\",\"position\":1,\"cards\":[]},{\"id\":\"in-progress\",\"title\":\"In Progress\",\"color\":\"amber\",\"position\":2,\"cards\":[]},{\"id\":\"review\",\"title\":\"Review\",\"color\":\"purple\",\"position\":3,\"cards\":[]},{\"id\":\"done\",\"title\":\"Done\",\"color\":\"emerald\",\"position\":4,\"cards\":[]}],\"cards\":[{\"id\":\"card-1700000001000-4qh0\",\"title\":\"On main\",\"description\":\"\",\"priority\":\"medium\",\"assignee\":\"You\",\"tags\":[],\"columnId\":\"todo\",\"position\":0,\"createdAt\":1700000001000,\"updatedAt\":1700000001000}],\"events\":[{\"type\":\"CARD_CREATED\",\"payload\":{\"id\":\"card-1700000001000-4qh0\",\"title\":\"On main\",\"description\":\"\",\"priority\":\"medium\",\"assignee\":\"You\",\"tags\":[],\"columnId\":\"todo\",\"position\":0,\"createdAt\":1700000001000,\"updatedAt\":1700000001000},\"userId\":\"user-000d57ae6\",\"boardId\":\"default-board\",\"id\":\"1700000001000\",\"timestamp\":1700000001000}],\"createdAt\":1700000000000,\"updatedAt\":1700000002000},\"createdAt\":1700000002000,\"lastCommit\":\"r79ise3d\",\"author\":\"current-user\",\"description\":\"\"}],[\"branch-1700000004000\",{\"id\":\"branch-1700000004000\",\"name\":\"feature-ui\",\"parentId\":\"branch-1700000002000\",\"boardSnapshot\":{\"id\":\"default-board\",\"title\":\"Main Board\",\"columns\":[{\"id\":\"backlog\",\"title\":\"Backlog\",\"color\":\"slate\",\"position\":0,\"cards\":[]},{\"id\":\"todo\",\"title\":\"To Do\",\"color\":\"blue\",\"position\":1,\"cards\":[]},{\"id\":\"in-progress\",\"title\":\"In Progress\",\"color\":\"amber\",\"position\":2,\"cards\":[]},{\"id\":\"review\",\"title\":\"Review\",\"color\":\"purple\",\"position\":3,\"cards\":[]},{\"id\":\"done\",\"title\":\"Done\",\"color\":\"emerald\",\"position\":4,\"cards\":[]}],\"cards\":[{\"id\":\"card-1700000001000-4qh0\",\"title\":\"On main\",\"description\":\"\",\"priority\":\"medium\",\"assignee\":\"You\",\"tags\":[],\"columnId\":\"todo\",\"position\":0,\"createdAt\":1700000001000,\"updatedAt\":1700000001000},{\"id\":\"card-1700000003000-gies\",\"title\":\"On feature\",\"description\":\"\",\"priority\":\"medium\",\"assignee\":\"You\",\"tags\":[],\"columnId\":\"backlog\",\"position\":0,\"createdAt\":1700000003000,\"updatedAt\":1700000003000}],\"events\":[{\"type\":\"CARD_CREATED\",\"payload\":{\"id\":\"card-1700000001000-4qh0\",\"title\":\"On main\",\"description\":\"\",\"priority\":\"medium\",\"assignee\":\"You\",\"tags\":[],\"columnId\":\"todo\",\"position\":0,\"createdAt\":1700000001000,\"updatedAt\":1700000001000},\"userId\":\"user-000d57ae6\",\"boardId\":\"default-board\",\"id\":\"1700000001000\",\"timestamp\":1700000001000},{\"type\":\"CARD_CREATED\",\"payload\":{\"id\":\"card-1700000003000-gies\",\"title\":\"On feature\",\"description\":\"\",\"priority\":\"medium\",\"assignee\":\"You\",\"tags\":[],\"columnId\":\"backlog\",\"position\":0,\"createdAt\":1700000003000,\"updatedAt\":1700000003000},\"userId\":\"user-000d57ae6\",\"boardId\":\"default-board\",\"id\":\"1700000003000\",\"timestamp\":1700000003000}],\"createdAt\":1700000000000,\"updatedAt\":1700000004000},\"createdAt\":1700000004000,\"lastCommit\":\"j6gsdj4h\",\"author\":\"current-user\",\"description\":\"\"}]],\"currentBranch\":\"branch-1700000002000\"}"
+  }
+ },
+ "expected": {
+  "current": "branch-1700000002000",
+  "branches": {
+   "main": {
+    "name": "main",
+    "cards": [
+     [
+      "card-1700000001000-4qh0",
+      "Edited on main",
+      "todo"
+     ]
+    ]
+   },
+   "branch-1700000002000": {
+    "name": "feature",
+    "cards": [
+     [
+      "card-1700000001000-4qh0",
+      "On main",
+      "todo"
+     ],
+     [
+      "card-1700000003000-gies",
+      "On feature",
+      "backlog"
+     ]
+    ]
+   },
+   "branch-1700000004000": {
+    "name": "feature-ui",
+    "cards": [
+     [
+      "card-1700000001000-4qh0",
+      "On main",
+      "todo"
+     ],
+     [
+      "card-1700000003000-gies",
+      "On feature",
+      "backlog"
+     ],
+     [
+      "card-1700000005000-7vrr",
+      "On feature-ui",
+      "review"
+     ]
+    ]
+   }
+  }
+ }
+}

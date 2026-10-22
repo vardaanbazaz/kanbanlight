@@ -4,13 +4,14 @@
 
 import { compareBranches } from '../domain/diff';
 import type { DomainError } from '../domain/errors';
-import { applyCardChange, createBoard, createBranch, mergeBase, switchBranch, toFields, type CardChange, type Env } from '../domain/history';
+import { applyCardChange, createBranch, mergeBase, switchBranch, toFields, type CardChange, type Env } from '../domain/history';
 import type { Clock, IdSource } from '../domain/ids';
 import { resolveBranch } from '../domain/names';
 import type { BoardRecord, BranchRecord, CommitId, CommitRecord, HeadRecord } from '../domain/types';
 import { checked } from '../storage/checked';
 import { isStorageError, storageError, type Change, type StorageAdapter, type WorkingCopyState } from '../storage/types';
 import { checkCommand, commandError, isQuery, type Command, type CommandError, type CommandErrorCode, type Query } from './commands';
+import { createFirstBoard, type LegacySource } from './bootstrap';
 import type { ChangeFeed, WriterLock } from './ports';
 
 export interface Platform {
@@ -19,6 +20,8 @@ export interface Platform {
   feed: ChangeFeed;
   clock: Clock;
   ids: IdSource;
+  // The web passes the 0.0.2 data to migrate once; a desktop build passes none.
+  legacy?: LegacySource;
 }
 
 export interface BoardState {
@@ -116,14 +119,13 @@ export async function createBoardService(platform: Platform): Promise<BoardServi
   }
 
   async function load(): Promise<BoardState | null> {
-    const boards = (await storage.listBoards()).sort((a, b) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : 1));
+    const listBoards = async () => (await storage.listBoards()).sort((a, b) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : 1));
+    let boards = await listBoards();
     if (boards.length === 0) {
       if (!writer) return null;
-      const created = createBoard(env);
-      await storage.apply(created.batch);
-      commits.set(created.value.commit.id, created.value.commit);
-      platform.feed.publish({ boardId: created.value.board.id });
-      return { board: created.value.board, branches: [created.value.branch], head: created.value.head, current: created.value.working };
+      await createFirstBoard(storage, env, platform.legacy);
+      boards = await listBoards();
+      platform.feed.publish({ boardId: boards[0].id });
     }
     const snapshot = (await storage.readBoard(boards[0].id))!;
     const current = await storage.readWorkingCopy(snapshot.board.id, snapshot.head.branchId);
@@ -245,6 +247,8 @@ export async function createBoardService(platform: Platform): Promise<BoardServi
     writer = await platform.lock.acquire();
     board = await load();
   } catch (error) {
+    // A failed open gives the lock back, so the next open (this tab or another) can be the writer.
+    if (writer) await platform.lock.release();
     throw toCommandError(error);
   }
 

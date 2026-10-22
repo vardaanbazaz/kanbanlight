@@ -3,6 +3,7 @@
 
 import type { BoardDriver, CardView } from './board-driver';
 import { memoryFeedHub, memoryLockHub } from '../src/commands/ports';
+import type { LegacySource } from '../src/commands/bootstrap';
 import { createBoardService, type BoardService } from '../src/commands/service';
 import { counterClock, counterIds } from '../src/domain/ids';
 import { sameName } from '../src/domain/names';
@@ -29,7 +30,7 @@ const byId = (a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id);
 export const viewOf = (cards: { id: string; title: string; columnId: string }[]) =>
   JSON.stringify([...cards].sort(byId).map((card): CardView => [card.id, card.title, card.columnId]));
 
-export async function openServiceBoard(backend: () => StorageAdapter): Promise<ServiceBoardDriver> {
+export async function openServiceBoard(backend: () => StorageAdapter, legacy?: LegacySource): Promise<ServiceBoardDriver> {
   const locks = memoryLockHub();
   const feeds = memoryFeedHub();
   const counter = { value: 0 };
@@ -55,6 +56,7 @@ export async function openServiceBoard(backend: () => StorageAdapter): Promise<S
       feed: feeds(),
       clock: counterClock(time),
       ids: counterIds(counter),
+      legacy,
     });
     const state = () => service.state()!;
     const pickCard = (pick: number): CardRecord | undefined => {

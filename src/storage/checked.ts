@@ -28,7 +28,8 @@ const filedUnder = (record: { boardId: string; branchId?: string }, boardId: str
   }
 };
 
-function checkChange(change: Change) {
+// Exported for callers that must know a batch passes before they try to store it.
+export function checkChange(change: Change) {
   switch (change.kind) {
     case 'putBoard':
       return writeOk(checkBoard(change.board));

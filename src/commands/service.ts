@@ -70,6 +70,9 @@ function toCardChange(command: CardCommand): CardChange {
   }
 }
 
+// Adapters return branches in no set order; the service shows them oldest first, everywhere.
+const byCreation = (a: BranchRecord, b: BranchRecord) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : 1);
+
 const refuse = (error: DomainError): never => {
   throw commandError(error.code, error.reason);
 };
@@ -125,7 +128,7 @@ export async function createBoardService(platform: Platform): Promise<BoardServi
     const snapshot = (await storage.readBoard(boards[0].id))!;
     const current = await storage.readWorkingCopy(snapshot.board.id, snapshot.head.branchId);
     if (!current) throw storageError('read-failed', 'the current branch has no working copy');
-    return { ...snapshot, current };
+    return { ...snapshot, branches: [...snapshot.branches].sort(byCreation), current };
   }
 
   // Stores a batch, then (only then) takes the new state, tells subscribers and other instances.
@@ -185,7 +188,7 @@ export async function createBoardService(platform: Platform): Promise<BoardServi
         if (!created.ok) return refuse(created.error);
         const fromHead = source.copy.branchId === state.head.branchId;
         const current = fromHead ? created.value.source : state.current;
-        const branches = [...state.branches, created.value.branch];
+        const branches = [...state.branches, created.value.branch].sort(byCreation);
         const switched = switchBranch(env, {
           branches,
           head: state.head,
@@ -268,10 +271,22 @@ export async function createBoardService(platform: Platform): Promise<BoardServi
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    async takeOver() {
-      writer = await platform.lock.acquire({ steal: true });
-      await reload();
-    },
+    // One queued task: commands sent earlier run before it (and are refused), later ones after it.
+    // The board is re-read only once the lock is held, so this instance never writes over a change
+    // the previous writer stored just before the handover.
+    takeOver: () =>
+      enqueue(async () => {
+        writer = await platform.lock.acquire({ steal: true });
+        try {
+          board = await load();
+        } catch (error) {
+          writer = false;
+          await platform.lock.release();
+          throw error;
+        } finally {
+          notify();
+        }
+      }),
     settled: () => tail.then(() => undefined),
     async close() {
       stopLost();

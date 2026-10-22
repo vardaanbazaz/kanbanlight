@@ -91,6 +91,18 @@ describe.each(backends)('board service on %s storage', (_name, makeBackend) => {
     expect(titles(cards(reloaded))).toEqual(['Idea only', 'Shared']);
   });
 
+  it('branches stay oldest first across reloads, even when ids sort differently', async () => {
+    // Found by the commands property: counter ids put branch-11 before branch-2 in storage order.
+    const h = harness(makeBackend);
+    const service = await h.open();
+    const created = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
+    for (const name of created) await service.run({ method: 'branch.create', params: { name } });
+    const names = (s: BoardService) => s.state()!.branches.map((branch) => branch.name);
+    expect(names(service)).toEqual(['main', ...created]);
+    await service.close();
+    expect(names(await h.open())).toEqual(['main', ...created]);
+  });
+
   it('a name two old branches share is refused as ambiguous', async () => {
     const h = harness(makeBackend);
     const service = await h.open();

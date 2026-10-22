@@ -4,6 +4,13 @@ Newest first. Each entry records what was decided, the reason given at the time,
 
 Some entries were written after the fact. They say so in **Source**. Where nobody wrote a reason down, the entry says "Not recorded"; reasons are never reconstructed.
 
+### 2026-10-20: Test tooling moves to Vitest 5, Vite 6 and tsx 4
+- **Decision:** both packages move from Vitest 3 to Vitest 5. The web app moves from Vite 5 to Vite 6.4, because Vitest 4 and 5 need Vite 6.4 or later. The CLI moves from tsx 3 to tsx 4, and `@types/node` from 20 to 22 because Vitest 5 accepts only `@types/node` 22 or 24 and later. Lockfiles are written with npm 10 so that Node 22's npm can read them.
+- **Why:** to clear the dev-dependency audit findings (tinypool critical, `@vitest/mocker`, esbuild through tsx 3 and Vite 5) with deliberate major upgrades instead of `npm audit fix --force`. None of these findings affected the production audit that CI runs (`--omit=dev --audit-level=high`).
+- **Alternatives considered:** Vitest 4.1.12, which fixes the same findings and accepts `@types/node` 20 but is not the current major; Vite 7.3, one major further than Vitest needs; keeping the web app on Vitest 3 to avoid changing the production build.
+- **Tradeoff accepted:** the production build now comes from Vite 6. The main JS bundle grew by about 1%. The Vercel preview must be checked before merge. No config or test changes were needed.
+- **Source:** recorded at the time.
+
 ### 2026-10-17: The CLI rejects extra words instead of joining them
 - **Decision:** every `kb` command refuses positional arguments it does not expect. `kb add Fix login bug` is an error that names the extra words, exits with code 1 and sends nothing; a title with spaces must be quoted.
 - **Why:** the CLI used to ignore extra words, so an unquoted title was cut to its first word (`kb add Fix login bug` made a card titled "Fix") and the command still reported success. Joining the words instead would hide typos, such as a missing quote.

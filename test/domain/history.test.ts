@@ -227,3 +227,33 @@ describe('merge base and unreachable commits', () => {
     expect(unreachableCommits(['c'], graph)).toEqual(['b', 'd', 'e', 'm']);
   });
 });
+
+describe('ordering', () => {
+  it('a card change writes only the changed card, never another card\'s position', () => {
+    const e = env();
+    let { working } = createBoard(e).value;
+    for (const title of ['A', 'B', 'C']) {
+      working = change(e, working, { command: 'card.create', input: { title, columnId: 'todo' } }).value.working;
+    }
+    const [a, b] = working.cards.map((card) => card.id);
+    const changes: CardChange[] = [
+      { command: 'card.create', input: { title: 'D', columnId: 'todo' } },
+      { command: 'card.move', cardId: a, columnId: 'done' },
+      { command: 'card.update', cardId: b, input: { columnId: 'review' } },
+      { command: 'card.delete', cardId: a },
+    ];
+    for (const cardChange of changes) {
+      const result = change(e, working, cardChange);
+      const written = result.batch.filter((item) => item.kind === 'putCard' || item.kind === 'deleteCard');
+      expect(written).toHaveLength(1);
+      const others = result.value.working.cards.filter((card) => working.cards.some((old) => old.id === card.id && old !== card));
+      expect(others.length).toBeLessThanOrEqual(1);
+      working = result.value.working;
+    }
+    expect(working.cards.map((card) => [card.title, card.columnId, card.position])).toEqual([
+      ['B', 'review', 0],
+      ['C', 'todo', 2],
+      ['D', 'todo', 3],
+    ]);
+  });
+});

@@ -26,6 +26,34 @@ export default tseslint.config(
     },
   },
   {
+    // The data layer must run on every platform: browser storage and tab APIs live only in src/platform/web.
+    files: ['src/domain/**/*.ts', 'src/storage/**/*.ts', 'src/commands/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['idb', 'react', 'react-dom'],
+          patterns: [
+            {
+              group: ['react-dom/*', '**/services/**', '**/store/**', '**/components/**', '**/platform/**'],
+              message: 'The data layer may not depend on the app, the UI or a platform.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        'indexedDB',
+        'localStorage',
+        'sessionStorage',
+        'window',
+        'document',
+        'navigator',
+        'BroadcastChannel',
+      ],
+    },
+  },
+  {
     // These files are replaced by the new data layer; the override goes with them.
     files: [
       'src/services/DatabaseService.ts',

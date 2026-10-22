@@ -13,6 +13,7 @@ import { isStorageError, storageError, type Change, type StorageAdapter, type Wo
 import { checkCommand, commandError, isQuery, type Command, type CommandError, type CommandErrorCode, type Query } from './commands';
 import { createFirstBoard, type LegacySource } from './bootstrap';
 import type { ChangeFeed, WriterLock } from './ports';
+import { toView, type BoardView } from './view';
 
 export interface Platform {
   storage: StorageAdapter;
@@ -35,8 +36,11 @@ export interface BoardService {
   // null only in a read-only instance that opened an empty store before the writer created a board.
   state(): BoardState | null;
   readOnly(): boolean;
+  // What the UI shows; the same object until something in it changes. null when state() is null.
+  getView(): BoardView | null;
   // Resolves with the result once the change is stored; rejects with a plain CommandError.
   run(command: unknown): Promise<unknown>;
+  // Called whenever getView() changes, and only then.
   subscribe(listener: () => void): () => void;
   // Takes the writer lock from another instance ("Use here").
   takeOver(): Promise<void>;
@@ -88,8 +92,16 @@ export async function createBoardService(platform: Platform): Promise<BoardServi
   let tail: Promise<unknown> = Promise.resolve();
   let writer = false;
   let board: BoardState | null = null;
+  let lastError: CommandError | null = null;
+  let view: BoardView | null = null;
 
-  const notify = () => listeners.forEach((listener) => listener());
+  // Rebuilds the view and tells subscribers, only if it changed.
+  const notify = () => {
+    const next = toView(view, { state: board, readOnly: !writer, lastError });
+    if (next === view) return;
+    view = next;
+    listeners.forEach((listener) => listener());
+  };
 
   function enqueue<T>(task: () => Promise<T>): Promise<T> {
     const result = tail.then(task);
@@ -246,6 +258,7 @@ export async function createBoardService(platform: Platform): Promise<BoardServi
     await storage.open();
     writer = await platform.lock.acquire();
     board = await load();
+    notify();
   } catch (error) {
     // A failed open gives the lock back, so the next open (this tab or another) can be the writer.
     if (writer) await platform.lock.release();
@@ -264,11 +277,23 @@ export async function createBoardService(platform: Platform): Promise<BoardServi
   return {
     state: () => board,
     readOnly: () => !writer,
+    getView: () => view,
     run(raw) {
       const parsed = checkCommand(raw);
+      // Every command, refused or not, sets the view's last error; queries leave it alone.
+      const query = parsed.ok && isQuery(parsed.value);
       return enqueue(async () => {
-        if (!parsed.ok) throw commandError('invalid-input', parsed.reason);
-        return isQuery(parsed.value) ? answer(parsed.value) : execute(parsed.value);
+        if (!query) lastError = null;
+        try {
+          if (!parsed.ok) throw commandError('invalid-input', parsed.reason);
+          return await (isQuery(parsed.value) ? answer(parsed.value) : execute(parsed.value));
+        } catch (error) {
+          const failure = toCommandError(error);
+          if (!query) lastError = failure;
+          throw failure;
+        } finally {
+          notify();
+        }
       });
     },
     subscribe(listener) {

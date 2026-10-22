@@ -1,6 +1,6 @@
 # Execution flow
 
-How execution moves through KanbanLight 0.0.2. This describes the current code; it will be replaced when the data layer is rebuilt. There are two programs. One is the browser app in `src/`. The other is the optional `kb` CLI in `cli/`, which talks to the app over a local WebSocket bridge.
+How execution moves through KanbanLight 0.0.2. This describes the current code; it will be replaced at the Stage 3 cutover, when the app starts using the new data layer (last section). There are two programs. One is the browser app in `src/`. The other is the optional `kb` CLI in `cli/`, which talks to the app over a local WebSocket bridge.
 
 ## Entry points
 
@@ -89,4 +89,50 @@ flowchart TD
   kb[kb CLI cli/src/index.ts] --> cmds[cli/src/commands] --> BC[BridgeClient:sendToBridge]
   BC --> srv[kb serve: CliBridgeServer] --> WS
   WS --> parse[bridgeProtocol:parseBridgeFrame] --> handle[CliSyncService:handleCommand] --> store
+```
+
+## Data layer (built, not yet used by the app)
+
+Stage 2 of the rebuild added a new data layer in `src/domain`, `src/storage`, `src/commands` and `src/platform`. Nothing above imports it, so it is on no execution path and the built app does not contain it. Its tests are its only callers until the Stage 3 cutover, which rewrites the rest of this file.
+
+**Opening a board.** Whoever opens a board (the app at the cutover, a test today) calls `src/commands/service.ts:createBoardService` with a `Platform`: a storage adapter, a writer lock, a change feed, a clock, an id source and, on the web only, a 0.0.2 data source. The web versions are `src/platform/web/indexeddb.ts:indexedDbStorage` (database `kanbanlight`), `locks.ts:webLock` (Web Locks), `feed.ts:broadcastFeed` (BroadcastChannel) and `legacySource.ts:legacyWebSource`. Tests use `src/storage/memory.ts:memoryStorage` and `src/commands/ports.ts:memoryLockHub` / `memoryFeedHub`.
+
+1. `createBoardService` wraps the adapter in `src/storage/checked.ts:checked`, which checks every record read and every change written, then calls the adapter's `open`.
+2. It asks for the writer lock. The first instance (tab) gets it; any other is read-only and follows the writer through the change feed.
+3. `load` reads the oldest board. On an empty store the writer calls `src/commands/bootstrap.ts:createFirstBoard`:
+   - with no 0.0.2 data source, or a `migration` meta marker already stored: `src/domain/history.ts:createBoard` (board, `main`, root commit, empty working copy);
+   - otherwise `legacyWebSource().read` reads IndexedDB `kanban-light` and the `kanban*` localStorage keys without writing (no data: a new board);
+   - `src/domain/legacy.ts:convertLegacy` turns the 0.0.2 data into new records and a list of what it changed. An unreadable branch list gives a new board and a `failed` marker. Otherwise every converted change is checked (`checked.ts:checkChange`) and stored in one batch with the `migration` marker. A read or store that fails writes nothing and fails the open, so the next open tries again.
+4. If opening fails, the lock is given back.
+5. `src/commands/view.ts:toView` builds the first view.
+
+**Running a command.** `BoardService:run(command)` → `src/commands/commands.ts:checkCommand` → one FIFO queue (`enqueue`). Queries (`board.view`, `branch.list`, `branch.compare`) go to `answer`, which reads the in-memory state. Compare also reads the other branch's working copy and any commits not yet loaded from storage, then calls `src/domain/history.ts:mergeBase` and `src/domain/diff.ts:compareBranches`. Commands go to `execute`, refused when read-only:
+
+| Command | Domain call |
+|---|---|
+| `card.create`, `card.update`, `card.move`, `card.delete` | `history.ts:applyCardChange` |
+| `branch.switch` | `names.ts:resolveBranch` → `history.ts:switchBranch` (commits a changed working copy first) |
+| `branch.create` | `names.ts:resolveBranch` (for `from`) → `history.ts:createBranch` → `switchBranch`, in one batch |
+
+Each domain call returns a batch of changes. `store` writes it with `checked(adapter).apply` (all or nothing). Only after the write succeeds does it update the in-memory state, rebuild the view (`toView`, which keeps every unchanged object), call subscribers if the view changed, and publish to the change feed. A failed command sets the view's `lastError`.
+
+**Other tabs and "Use here".** A read-only instance's feed listener re-runs `load` through the queue. `BoardService:takeOver` steals the lock in one queued task and re-reads the board before acting as the writer. The old writer's `onLost` callback makes it read-only.
+
+**Export.** `src/storage/exportFormat.ts:writeExport` reads through the adapter into the export file (format `kanbanlight`, version 1). `readExport` checks a file and returns its records and warnings. No UI calls either yet.
+
+```mermaid
+flowchart TD
+  caller[caller: tests today, the app at the cutover] --> svc[commands/service.ts:createBoardService]
+  svc --> chk[storage/checked.ts:checked] --> adapter[(adapter: indexedDbStorage or memoryStorage)]
+  svc --> lock[writer lock: webLock or memoryLockHub]
+  svc -->|empty store, writer only| boot[commands/bootstrap.ts:createFirstBoard]
+  boot --> legacy[platform/web/legacySource.ts: read kanban-light, read-only] --> conv[domain/legacy.ts:convertLegacy]
+  boot --> fresh[domain/history.ts:createBoard]
+  conv --> chk
+  fresh --> chk
+  run[BoardService:run] --> parse[commands/commands.ts:checkCommand] --> queue[FIFO queue]
+  queue --> exec[execute: domain/history.ts] --> store[store] --> chk
+  queue --> answer[answer: domain/diff.ts, mergeBase]
+  store --> view[commands/view.ts:toView] --> subs[subscribers]
+  store --> feed[change feed] --> other[read-only tabs: load]
 ```

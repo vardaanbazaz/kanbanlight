@@ -1,0 +1,278 @@
+{
+ "legacy": {
+  "indexedDB": {
+   "boards": [
+    {
+     "id": "default-board",
+     "title": "Main Board",
+     "columns": [
+      {
+       "id": "backlog",
+       "title": "Backlog",
+       "color": "slate",
+       "position": 0,
+       "cards": []
+      },
+      {
+       "id": "todo",
+       "title": "To Do",
+       "color": "blue",
+       "position": 1,
+       "cards": []
+      },
+      {
+       "id": "in-progress",
+       "title": "In Progress",
+       "color": "amber",
+       "position": 2,
+       "cards": []
+      },
+      {
+       "id": "review",
+       "title": "Review",
+       "color": "purple",
+       "position": 3,
+       "cards": []
+      },
+      {
+       "id": "done",
+       "title": "Done",
+       "color": "emerald",
+       "position": 4,
+       "cards": []
+      }
+     ],
+     "createdAt": 1700000000000,
+     "updatedAt": 1700000000000
+    }
+   ],
+   "cards": [
+    {
+     "id": "card-1700000002000-r79i",
+     "title": "Fix login and logout",
+     "description": "",
+     "priority": "medium",
+     "assignee": "You",
+     "tags": [],
+     "columnId": "review",
+     "position": 0,
+     "createdAt": 1700000002000,
+     "updatedAt": 1700000004000
+    },
+    {
+     "id": "card-1700000003000-gies",
+     "title": "Ship",
+     "description": "",
+     "priority": "medium",
+     "assignee": "You",
+     "tags": [],
+     "columnId": "done",
+     "position": 0,
+     "createdAt": 1700000003000,
+     "updatedAt": 1700000003000
+    }
+   ],
+   "events": [
+    {
+     "type": "CARD_CREATED",
+     "payload": {
+      "id": "card-1700000001000-4qh0",
+      "title": "Write docs",
+      "description": "",
+      "priority": "medium",
+      "assignee": "You",
+      "tags": [],
+      "columnId": "todo",
+      "position": 0,
+      "createdAt": 1700000001000,
+      "updatedAt": 1700000001000
+     },
+     "userId": "user-000d57ae6",
+     "boardId": "default-board",
+     "id": "1700000001000",
+     "timestamp": 1700000001000
+    },
+    {
+     "type": "CARD_CREATED",
+     "payload": {
+      "id": "card-1700000002000-r79i",
+      "title": "Fix login",
+      "description": "",
+      "priority": "medium",
+      "assignee": "You",
+      "tags": [],
+      "columnId": "in-progress",
+      "position": 0,
+      "createdAt": 1700000002000,
+      "updatedAt": 1700000002000
+     },
+     "userId": "user-000d57ae6",
+     "boardId": "default-board",
+     "id": "1700000002000",
+     "timestamp": 1700000002000
+    },
+    {
+     "type": "CARD_CREATED",
+     "payload": {
+      "id": "card-1700000003000-gies",
+      "title": "Ship",
+      "description": "",
+      "priority": "medium",
+      "assignee": "You",
+      "tags": [],
+      "columnId": "done",
+      "position": 0,
+      "createdAt": 1700000003000,
+      "updatedAt": 1700000003000
+     },
+     "userId": "user-000d57ae6",
+     "boardId": "default-board",
+     "id": "1700000003000",
+     "timestamp": 1700000003000
+    },
+    {
+     "type": "CARD_UPDATED",
+     "payload": {
+      "cardId": "card-1700000002000-r79i",
+      "updates": {
+       "title": "Fix login and logout",
+       "columnId": "review"
+      }
+     },
+     "userId": "user-000d57ae6",
+     "boardId": "default-board",
+     "id": "1700000004000",
+     "timestamp": 1700000004000
+    },
+    {
+     "type": "CARD_DELETED",
+     "payload": {
+      "cardId": "card-1700000001000-4qh0"
+     },
+     "userId": "user-000d57ae6",
+     "boardId": "default-board",
+     "id": "1700000005000",
+     "timestamp": 1700000005000
+    }
+   ],
+   "plugins": [],
+   "snapshots": [
+    {
+     "id": "snapshot-main-1700000000000",
+     "boardId": "default-board",
+     "branchId": "main",
+     "data": {
+      "cards": [],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000000000,
+     "description": "Snapshot for branch main at 10:13:20 PM"
+    }
+   ],
+   "users": []
+  },
+  "localStorage": {
+   "kanban-branches": "{\"branches\":[[\"main\",{\"id\":\"main\",\"name\":\"main\",\"parentId\":null,\"boardSnapshot\":null,\"createdAt\":1700000000000,\"lastCommit\":\"init\",\"author\":\"system\",\"description\":\"Default branch\"}]],\"currentBranch\":\"main\"}"
+  }
+ },
+ "expected": {
+  "current": "main",
+  "branches": {
+   "main": {
+    "name": "main",
+    "cards": [
+     [
+      "card-1700000002000-r79i",
+      "Fix login and logout",
+      "review"
+     ],
+     [
+      "card-1700000003000-gies",
+      "Ship",
+      "done"
+     ]
+    ]
+   }
+  }
+ }
+}

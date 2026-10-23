@@ -4,6 +4,24 @@ Newest first. Each entry records what was decided, the reason given at the time,
 
 Some entries were written after the fact. They say so in **Source**. Where nobody wrote a reason down, the entry says "Not recorded"; reasons are never reconstructed.
 
+### 2026-10-22: A website and a desktop app from one codebase
+- **Decision:** KanbanLight ships as a website and as a desktop app, built from the same code.
+  - The website stays zero-install and keeps boards in the browser (IndexedDB). It may later start offline through a service worker. It works without the CLI.
+  - The desktop app exists for what a browser cannot do well: reading the user's git repository, and owning the connection to the CLI directly. It replaces the WebSocket bridge between the CLI and a browser tab.
+  - The desktop shell comes after 0.1.0. Whether it is built with Tauri or Electron is decided then.
+  - Versions: 0.2 becomes "desktop app, and the CLI talks to the desktop app" instead of a reworked browser bridge. Git linking (0.5) is desktop-only.
+- **Why:** a browser cannot do two things well: read the user's git repository, and own the connection to the CLI. The bridge between a browser tab and the CLI needs pairing, origin checks and a relay process to be safe; a desktop app can do both directly, while the website stays the zero-install way to try KanbanLight.
+- **Alternatives considered:** keeping the browser bridge and reworking it with pairing and request/reply messages; letting the CLI serve the web app itself; a website only, with git features done entirely in the CLI.
+- **Tradeoff accepted:** two builds to test and release; the website and the desktop app keep separate boards, so moving a board between them needs export and import; git features never come to the website.
+- **Source:** recorded at the time.
+
+### 2026-10-22: Board storage behind one interface
+- **Decision:** the new data layer talks to storage only through one interface. An IndexedDB implementation serves the website; a file-based implementation can be added for the desktop app without changing the rest of the code. An in-memory implementation is used in tests. Writes go through one call that applies a batch of changes all at once. Validation, ids, timestamps and history rules sit above the storage implementations, so every implementation gets them. The single-writer lock and the change notifications between tabs are separate interfaces with their own browser and desktop versions. The same test suite runs against every storage implementation.
+- **Why:** the desktop app needs to keep boards somewhere other than IndexedDB, and the data layer is the riskiest code in the project; one interface with one shared test suite means a new storage implementation is checked by the same tests before anything depends on it.
+- **Alternatives considered:** writing the data layer directly against IndexedDB and adding a file-based layer when the desktop app arrives.
+- **Tradeoff accepted:** a second implementation (in memory) and a shared test suite to maintain; the interface cannot use IndexedDB-specific features such as cursors or indexes directly.
+- **Source:** recorded at the time.
+
 ### 2026-10-20: Test tooling moves to Vitest 5, Vite 6 and tsx 4
 - **Decision:** both packages move from Vitest 3 to Vitest 5. The web app moves from Vite 5 to Vite 6.4, because Vitest 4 and 5 need Vite 6.4 or later. The CLI moves from tsx 3 to tsx 4, and `@types/node` from 20 to 22 because Vitest 5 accepts only `@types/node` 22 or 24 and later. Lockfiles are written with npm 10 so that Node 22's npm can read them.
 - **Why:** to clear the dev-dependency audit findings (tinypool critical, `@vitest/mocker`, esbuild through tsx 3 and Vite 5) with deliberate major upgrades instead of `npm audit fix --force`. None of these findings affected the production audit that CI runs (`--omit=dev --audit-level=high`).
@@ -19,6 +37,7 @@ Some entries were written after the fact. They say so in **Source**. Where nobod
 - **Source:** recorded at the time.
 
 ### 2026-10-17: The bridge refuses web pages except the local web app
+- **Status:** in force until the browser bridge is removed in 0.2.
 - **Decision:** the bridge refuses every web page except the web app served on `http://localhost` or `http://127.0.0.1` at port 5173 (`npm run dev`) or port 4173 (`npm run preview`). The hosted site is refused. Connections without an `Origin` header, such as the CLI's, are accepted, so any program on this computer can still connect. There is no option to allow another origin in 0.0.2.
 - **Why:** part of locking down the bridge in the 0.0.2 patch; "2026-10-17: Rebuild plan" records that "the open bridge is the biggest security risk". A fixed list is the smallest safe change for a patch; configurable access comes with pairing in 0.2.
 - **Alternatives considered:** an `--allow-origin` flag, deferred to 0.2.
@@ -54,6 +73,7 @@ Some entries were written after the fact. They say so in **Source**. Where nobod
 - **Source:** recorded at the time.
 
 ### 2026-10-17: Rebuild plan
+- **Status:** amended by "2026-10-22: A website and a desktop app from one codebase": the 0.2 bridge rework (pairing, one connected web app, reconsidering the CLI serving the web app) is replaced by the desktop app; npm workspaces with a shared protocol package arrive with the desktop app; the versions line changes as described there. Import moves to 0.2 and "Delete all data" to the redesign. `kb branch <name> [<from>]` and CLI support for the new branch commands come with the desktop app in 0.2, not through the browser bridge; the "From" choice in the web app is unchanged. The service worker comes in a 0.1.x release.
 - **Decision:** how KanbanLight is rebuilt after 0.0.1, and in what order.
   - **Data**
     - Commits are full board states (cards and columns) linked to their parent commits. A branch is a pointer to a commit. Each branch has a working copy and a short log of recent changes with their previous values, used only for undo and cleared at every commit.
@@ -121,7 +141,7 @@ Some entries were written after the fact. They say so in **Source**. Where nobod
 - **Source:** recorded at the time.
 
 ### 2026-10-04: Product direction
-- **Status:** rule 9 amended by "2026-10-17: Rebuild plan" (not built yet).
+- **Status:** rule 9 amended by "2026-10-17: Rebuild plan" (not built yet); rule 6 amended by "2026-10-22: A website and a desktop app from one codebase" (the desktop app, not the CLI, reads the user's repository; git integration is desktop-only).
 - **Decision:** ten rules for what KanbanLight is and in what order it is built:
   1. Drag-and-drop and card ordering within a column are table stakes, ranked alongside merge.
   2. One board with five fixed columns for now. Every record carries a board id, so multiple boards later is an addition, not a migration. Multiple boards come after merge.
@@ -174,7 +194,7 @@ Some entries were written after the fact. They say so in **Source**. Where nobod
 - **Source:** recorded at the time.
 
 ### Date not recorded: CLI talks to the app through a local WebSocket broadcast bridge
-- **Status:** superseded by "2026-10-17: Rebuild plan" (not built yet; 0.0.1 still works as described here).
+- **Status:** superseded by "2026-10-17: Rebuild plan" and "2026-10-22: A website and a desktop app from one codebase" (not built yet; 0.0.2 still works as described here).
 - **Decision:** `kb serve` runs a `ws` server on port 8080 that rebroadcasts every message. Other `kb` commands are one-shot clients. The browser tab connects to the bridge.
 - **Why:** not recorded.
 - **Alternatives considered:** a CLI with its own SQLite store. It was built, then parked, because it never synced with the browser.

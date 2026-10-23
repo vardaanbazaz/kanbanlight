@@ -1,0 +1,325 @@
+{
+ "legacy": {
+  "indexedDB": {
+   "boards": [
+    {
+     "id": "default-board",
+     "title": "Main Board",
+     "columns": [
+      {
+       "id": "backlog",
+       "title": "Backlog",
+       "color": "slate",
+       "position": 0,
+       "cards": []
+      },
+      {
+       "id": "todo",
+       "title": "To Do",
+       "color": "blue",
+       "position": 1,
+       "cards": []
+      },
+      {
+       "id": "in-progress",
+       "title": "In Progress",
+       "color": "amber",
+       "position": 2,
+       "cards": []
+      },
+      {
+       "id": "review",
+       "title": "Review",
+       "color": "purple",
+       "position": 3,
+       "cards": []
+      },
+      {
+       "id": "done",
+       "title": "Done",
+       "color": "emerald",
+       "position": 4,
+       "cards": []
+      }
+     ],
+     "createdAt": 1700000000000,
+     "updatedAt": 1700000000000
+    }
+   ],
+   "cards": [
+    {
+     "id": "card-1700000001000-4qh0",
+     "title": "  Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title   ",
+     "description": "  Keep **these** spaces  \n",
+     "priority": "medium",
+     "assignee": "  Ann  ",
+     "tags": [
+      "tag-0",
+      "tag-1",
+      "tag-2",
+      "tag-3",
+      "tag-4",
+      "tag-5",
+      "tag-6",
+      "tag-7",
+      "tag-8",
+      "tag-9",
+      "tag-10",
+      "tag-11",
+      "tag-12",
+      "tag-13",
+      "tag-14",
+      "tag-15",
+      "tag-16",
+      "tag-17",
+      "tag-18",
+      "tag-19",
+      "tag-20",
+      "tag-21",
+      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "  spaced  ",
+      "tag-0",
+      " tag-1"
+     ],
+     "columnId": "todo",
+     "position": 0,
+     "createdAt": 1700000001000,
+     "updatedAt": 1700000001000
+    },
+    {
+     "id": "card-1700000002000-r79i",
+     "title": "Nobody",
+     "description": "",
+     "priority": "medium",
+     "assignee": "Unassigned",
+     "tags": [],
+     "columnId": "backlog",
+     "position": 0,
+     "createdAt": 1700000002000,
+     "updatedAt": 1700000002000
+    },
+    {
+     "id": "card-1700000003000-gies",
+     "title": "Plain",
+     "description": "",
+     "priority": "medium",
+     "assignee": "You",
+     "tags": [],
+     "columnId": "done",
+     "position": 0,
+     "createdAt": 1700000003000,
+     "updatedAt": 1700000003000
+    }
+   ],
+   "events": [
+    {
+     "type": "CARD_CREATED",
+     "payload": {
+      "id": "card-1700000001000-4qh0",
+      "title": "  Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title   ",
+      "description": "  Keep **these** spaces  \n",
+      "priority": "medium",
+      "assignee": "  Ann  ",
+      "tags": [
+       "tag-0",
+       "tag-1",
+       "tag-2",
+       "tag-3",
+       "tag-4",
+       "tag-5",
+       "tag-6",
+       "tag-7",
+       "tag-8",
+       "tag-9",
+       "tag-10",
+       "tag-11",
+       "tag-12",
+       "tag-13",
+       "tag-14",
+       "tag-15",
+       "tag-16",
+       "tag-17",
+       "tag-18",
+       "tag-19",
+       "tag-20",
+       "tag-21",
+       "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+       "  spaced  ",
+       "tag-0",
+       " tag-1"
+      ],
+      "columnId": "todo",
+      "position": 0,
+      "createdAt": 1700000001000,
+      "updatedAt": 1700000001000
+     },
+     "userId": "user-000d57ae6",
+     "boardId": "default-board",
+     "id": "1700000001000",
+     "timestamp": 1700000001000
+    },
+    {
+     "type": "CARD_CREATED",
+     "payload": {
+      "id": "card-1700000002000-r79i",
+      "title": "Nobody",
+      "description": "",
+      "priority": "medium",
+      "assignee": "Unassigned",
+      "tags": [],
+      "columnId": "backlog",
+      "position": 0,
+      "createdAt": 1700000002000,
+      "updatedAt": 1700000002000
+     },
+     "userId": "user-000d57ae6",
+     "boardId": "default-board",
+     "id": "1700000002000",
+     "timestamp": 1700000002000
+    },
+    {
+     "type": "CARD_CREATED",
+     "payload": {
+      "id": "card-1700000003000-gies",
+      "title": "Plain",
+      "description": "",
+      "priority": "medium",
+      "assignee": "You",
+      "tags": [],
+      "columnId": "done",
+      "position": 0,
+      "createdAt": 1700000003000,
+      "updatedAt": 1700000003000
+     },
+     "userId": "user-000d57ae6",
+     "boardId": "default-board",
+     "id": "1700000003000",
+     "timestamp": 1700000003000
+    }
+   ],
+   "plugins": [],
+   "snapshots": [
+    {
+     "id": "snapshot-main-1700000000000",
+     "boardId": "default-board",
+     "branchId": "main",
+     "data": {
+      "cards": [],
+      "columns": [
+       {
+        "id": "backlog",
+        "title": "Backlog",
+        "color": "slate",
+        "position": 0,
+        "cards": []
+       },
+       {
+        "id": "todo",
+        "title": "To Do",
+        "color": "blue",
+        "position": 1,
+        "cards": []
+       },
+       {
+        "id": "in-progress",
+        "title": "In Progress",
+        "color": "amber",
+        "position": 2,
+        "cards": []
+       },
+       {
+        "id": "review",
+        "title": "Review",
+        "color": "purple",
+        "position": 3,
+        "cards": []
+       },
+       {
+        "id": "done",
+        "title": "Done",
+        "color": "emerald",
+        "position": 4,
+        "cards": []
+       }
+      ],
+      "events": [],
+      "board": {
+       "id": "default-board",
+       "title": "Main Board",
+       "columns": [
+        {
+         "id": "backlog",
+         "title": "Backlog",
+         "color": "slate",
+         "position": 0,
+         "cards": []
+        },
+        {
+         "id": "todo",
+         "title": "To Do",
+         "color": "blue",
+         "position": 1,
+         "cards": []
+        },
+        {
+         "id": "in-progress",
+         "title": "In Progress",
+         "color": "amber",
+         "position": 2,
+         "cards": []
+        },
+        {
+         "id": "review",
+         "title": "Review",
+         "color": "purple",
+         "position": 3,
+         "cards": []
+        },
+        {
+         "id": "done",
+         "title": "Done",
+         "color": "emerald",
+         "position": 4,
+         "cards": []
+        }
+       ],
+       "createdAt": 1700000000000,
+       "updatedAt": 1700000000000
+      }
+     },
+     "timestamp": 1700000000000,
+     "description": "Snapshot for branch main at 10:13:20 PM"
+    }
+   ],
+   "users": []
+  },
+  "localStorage": {
+   "kanban-branches": "{\"branches\":[[\"main\",{\"id\":\"main\",\"name\":\"main\",\"parentId\":null,\"boardSnapshot\":null,\"createdAt\":1700000000000,\"lastCommit\":\"init\",\"author\":\"system\",\"description\":\"Default branch\"}]],\"currentBranch\":\"main\"}"
+  }
+ },
+ "expected": {
+  "current": "main",
+  "branches": {
+   "main": {
+    "name": "main",
+    "cards": [
+     [
+      "card-1700000001000-4qh0",
+      "  Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title   ",
+      "todo"
+     ],
+     [
+      "card-1700000002000-r79i",
+      "Nobody",
+      "backlog"
+     ],
+     [
+      "card-1700000003000-gies",
+      "Plain",
+      "done"
+     ]
+    ]
+   }
+  }
+ }
+}

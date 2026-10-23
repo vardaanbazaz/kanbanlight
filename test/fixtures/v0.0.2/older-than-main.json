@@ -238,7 +238,7 @@
       }
      },
      "timestamp": 1700000002000,
-     "description": "Snapshot for branch branch-1600000000000 at 3:43:22 AM"
+     "description": "Snapshot for branch branch-1600000000000 at 10:13:22 PM"
     },
     {
      "id": "snapshot-branch-1600000000000-1700000005000",
@@ -393,7 +393,7 @@
       }
      },
      "timestamp": 1700000005000,
-     "description": "Snapshot for branch branch-1600000000000 at 3:43:25 AM"
+     "description": "Snapshot for branch branch-1600000000000 at 10:13:25 PM"
     },
     {
      "id": "snapshot-main-1700000000000",
@@ -484,7 +484,7 @@
       }
      },
      "timestamp": 1700000000000,
-     "description": "Snapshot for branch main at 3:43:20 AM"
+     "description": "Snapshot for branch main at 10:13:20 PM"
     },
     {
      "id": "snapshot-main-1700000002000",
@@ -608,7 +608,7 @@
       }
      },
      "timestamp": 1700000002000,
-     "description": "Snapshot for branch main at 3:43:22 AM"
+     "description": "Snapshot for branch main at 10:13:22 PM"
     },
     {
      "id": "snapshot-main-1700000006000",
@@ -732,7 +732,7 @@
       }
      },
      "timestamp": 1700000006000,
-     "description": "Snapshot for branch main at 3:43:26 AM"
+     "description": "Snapshot for branch main at 10:13:26 PM"
     }
    ],
    "users": []

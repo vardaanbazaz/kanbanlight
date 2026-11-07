@@ -1,0 +1,32 @@
+{
+  "name": "kanbanlight-vscode",
+  "displayName": "KanbanLight",
+  "description": "A board where each card is a real Git branch. Slice 1: proof only.",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "kanbanlight",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.136.0"
+  },
+  "main": "./dist/src/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "kanbanlight.openBoard",
+        "title": "KanbanLight: Open Board"
+      }
+    ]
+  },
+  "scripts": {
+    "typecheck": "tsc -p . --noEmit",
+    "build": "tsc -p .",
+    "test": "npm run build && node --test \"dist/test/*.test.js\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "1.136.0",
+    "typescript": "^5.9.3"
+  }
+}

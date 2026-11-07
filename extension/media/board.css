@@ -1,0 +1,13 @@
+body { font-family: var(--vscode-font-family); color: var(--vscode-foreground); background: var(--vscode-editor-background); padding: 12px; }
+header { display: flex; align-items: baseline; gap: 16px; }
+h1 { font-size: 1.3em; margin: 0 0 8px; }
+#branch { font-family: var(--vscode-editor-font-family); opacity: 0.85; }
+#notice { padding: 6px 10px; margin: 8px 0; border-radius: 4px; }
+#notice.error { background: var(--vscode-inputValidation-errorBackground); border: 1px solid var(--vscode-inputValidation-errorBorder); }
+#notice.ok { background: var(--vscode-inputValidation-infoBackground); border: 1px solid var(--vscode-inputValidation-infoBorder); }
+#board { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 10px; }
+.column { background: var(--vscode-sideBar-background); border-radius: 6px; padding: 8px; min-height: 240px; }
+.column h2 { font-size: 0.95em; margin: 0 0 8px; }
+.card { background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-widget-border, transparent); border-radius: 4px; padding: 8px; margin-bottom: 8px; cursor: grab; }
+.card .branch { display: block; margin-top: 4px; font-size: 0.85em; opacity: 0.8; overflow-wrap: anywhere; }
+body.busy .card { cursor: progress; opacity: 0.6; }

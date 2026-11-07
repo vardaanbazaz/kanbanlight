@@ -4,6 +4,7 @@
 // branch, or `switch kl/<slug>` to return to one. Nothing here rebases, resets, cleans, stashes,
 // forces or pushes.
 import { execFile } from 'node:child_process';
+import { CARD_BRANCH } from './model';
 
 const ALLOWED = new Set(['rev-parse', 'symbolic-ref', 'status', 'show-ref', 'check-ref-format', 'switch']);
 const MAX_SLUG = 40;
@@ -60,7 +61,7 @@ export async function repoRoot(gitPath: string, dir: string): Promise<string | n
   return r.code === 0 && r.stdout.trim() ? r.stdout.trim() : null;
 }
 
-async function branchExists(gitPath: string, dir: string, name: string): Promise<boolean> {
+export async function branchExists(gitPath: string, dir: string, name: string): Promise<boolean> {
   const r = await git(gitPath, dir, ['show-ref', '--verify', '--quiet', `refs/heads/${name}`]);
   return r.code === 0;
 }
@@ -81,12 +82,16 @@ export async function defaultBranch(gitPath: string, dir: string): Promise<strin
  * changes over silently, so that check is ours. Untracked files do not block: if switching would
  * overwrite one, git refuses on its own and changes nothing.
  */
-export async function startCard(gitPath: string, dir: string, title: string): Promise<StartResult> {
+export function startCard(gitPath: string, dir: string, title: string): Promise<StartResult> {
+  return startBranch(gitPath, dir, branchNameFor(title));
+}
+
+/** `startCard` for a branch name chosen already (a card's stored branch, or `branchNameFor` plus a suffix). */
+export async function startBranch(gitPath: string, dir: string, branch: string | null): Promise<StartResult> {
   if (!(await isRepo(gitPath, dir))) {
     return { ok: false, reason: 'not-repo', message: 'This folder is not a Git repository. Nothing was changed.' };
   }
-  const branch = branchNameFor(title);
-  const fmt = branch ? await git(gitPath, dir, ['check-ref-format', '--branch', branch]) : null;
+  const fmt = branch && CARD_BRANCH.test(branch) ? await git(gitPath, dir, ['check-ref-format', '--branch', branch]) : null;
   if (!branch || !fmt || fmt.code !== 0) {
     return { ok: false, reason: 'bad-name', message: 'This card title gives no valid branch name. Nothing was changed.' };
   }

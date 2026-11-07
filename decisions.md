@@ -4,6 +4,14 @@ Newest first. Each entry records what was decided, the reason given at the time,
 
 Some entries were written after the fact. They say so in **Source**. Where nobody wrote a reason down, the entry says "Not recorded"; reasons are never reconstructed.
 
+### 2026-11-06: The VS Code extension runs git through execFile
+- **Decision:** the slice 1 extension calls the git binary directly through Node's `execFile`, with an argument array and no shell. Only an allowlist of subcommands can run (`rev-parse`, `symbolic-ref`, `status`, `show-ref`, `check-ref-format`, `switch`). It uses the same git binary as VS Code's built-in Git extension, falling back to `git` on PATH.
+- **Also:** card branches start from the repo's default branch (local `main`, else `master`; if neither exists the move is blocked), not from HEAD. Unsaved files inside the repo block every Git action, whatever the auto save setting.
+- **Why:** card titles are untrusted text, so no title may reach a shell; an argument array plus a subcommand allowlist means the extension cannot rebase, reset, clean, stash, force or push. Git code with no `vscode` import can be tested against real repos.
+- **Alternatives considered:** Not recorded.
+- **Tradeoff accepted:** Not recorded.
+- **Source:** the execFile choice was written after the fact, from the code and its comments; the default-branch and unsaved-files rules were recorded at the time.
+
 ### 2026-10-22: A website and a desktop app from one codebase
 - **Decision:** KanbanLight ships as a website and as a desktop app, built from the same code.
   - The website stays zero-install and keeps boards in the browser (IndexedDB). It may later start offline through a service worker. It works without the CLI.

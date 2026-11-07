@@ -9,6 +9,7 @@ How execution moves through KanbanLight 0.0.2. This describes the current code; 
 | Browser app | `npm run dev` / `npm run build` (Vite), loads `index.html` | `index.html`, then `src/main.tsx` |
 | CLI | `npx tsx src/index.ts <command>` from `cli/` (written `kb <command>` below; `kb` is not installed by any step) | `cli/src/index.ts` |
 | CLI bridge server | `kb serve` (alias `kb start`), default port 8080 | `cli/src/server.ts:startCliServer` |
+| VS Code extension (slice 1 proof) | command "KanbanLight: Open Board" in an Extension Development Host | `extension/src/extension.ts:activate` |
 
 The app has no routes. It is a single page. There are no background jobs except the bridge reconnect timer (below), which runs only on a page served from `localhost` or `127.0.0.1`.
 
@@ -136,3 +137,21 @@ flowchart TD
   store --> view[commands/view.ts:toView] --> subs[subscribers]
   store --> feed[change feed] --> other[read-only tabs: load]
 ```
+
+## VS Code extension (slice 1 proof)
+
+A separate package in `extension/`. It shares no code with `src/` or `cli/`. Each card stands for a real Git branch in the first workspace folder.
+
+1. `extension/src/extension.ts:activate` registers `kanbanlight.openBoard`.
+2. `extension.ts:openBoard` reveals the existing panel, or:
+   - `extension.ts:gitApi` activates the built-in `vscode.git` extension and takes its git binary path (falls back to `git` on PATH) and its repositories;
+   - creates `extension/src/board.ts:Board` (hard-coded sample cards, held in memory by the host);
+   - creates the webview with a strict CSP (`extension.ts:html`); `extension/media/board.js` renders the state and sends `{type:'ready'}`.
+3. Every webview message goes through `board.ts:parseMessage`; anything that is not `ready` or a well-formed `move` is dropped. Then `Board:move`, then `Board:view` → `postMessage` (cards, current branch, notice).
+4. `Board:move` into In Progress:
+   - `git.ts:repoRoot` (`rev-parse --show-toplevel`), then `board.ts:unsavedInRepo` over the open documents that `extension.ts:openDocs` reports (text and notebook, `isDirty`, symlinks resolved). Any unsaved file inside the repo blocks here, before any Git action, with a notice naming the files (`board.ts:unsavedMessage`).
+   - `extension/src/git.ts:startCard`: `isRepo` → `branchNameFor` + `check-ref-format` → `status --porcelain --untracked-files=no` (tracked changes?) → `show-ref` (branch exists?). If `kl/<slug>` exists: `switch kl/<slug>`. If not: `git.ts:defaultBranch` (local `main`, else `master`, else block) → `switch -c kl/<slug> refs/heads/<default>`.
+   - Any block leaves the repo and the card unchanged and sets an error notice. Moves to other columns do no Git work.
+5. The header branch is re-read (`git.ts:currentBranch`) after each message, when the panel's view state changes, and when a Git extension repository reports a state change.
+
+All git calls go through `git.ts:git` (execFile, argument array, subcommand allowlist).

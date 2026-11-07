@@ -4,6 +4,13 @@ Newest first. Each entry records what was decided, the reason given at the time,
 
 Some entries were written after the fact. They say so in **Source**. Where nobody wrote a reason down, the entry says "Not recorded"; reasons are never reconstructed.
 
+### 2026-11-07: Board data in workspace storage; columns carry a Git action; deleting a card keeps its branch
+- **Decision:** board data lives in the workspace's VS Code storage (`context.workspaceState`). Columns carry an optional Git action from a fixed list. Deleting a card never deletes its Git branch.
+- **Why:** board data stays out of the repo so switching branches never changes the board; deleting a card keeps its branch so no work is lost by accident.
+- **Alternatives considered:** Not recorded.
+- **Tradeoff accepted:** Not recorded.
+- **Source:** recorded at the time.
+
 ### 2026-11-06: The VS Code extension runs git through execFile
 - **Decision:** the slice 1 extension calls the git binary directly through Node's `execFile`, with an argument array and no shell. Only an allowlist of subcommands can run (`rev-parse`, `symbolic-ref`, `status`, `show-ref`, `check-ref-format`, `switch`). It uses the same git binary as VS Code's built-in Git extension, falling back to `git` on PATH.
 - **Also:** card branches start from the repo's default branch (local `main`, else `master`; if neither exists the move is blocked), not from HEAD. Unsaved files inside the repo block every Git action, whatever the auto save setting.

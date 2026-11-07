@@ -4,7 +4,8 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { Board, parseMessage, unsavedInRepo, unsavedMessage } from '../src/board';
+import { Board, BoardDeps, STORE_KEY, UNREADABLE_KEY, parseMessage, unsavedInRepo, unsavedMessage } from '../src/board';
+import { Card, actionLine, uniqueBranch } from '../src/model';
 import { branchNameFor, defaultBranch, startCard } from '../src/git';
 
 const ROOT = '/tmp/kanbanlight-test';
@@ -187,42 +188,6 @@ test('blocked: title with no valid branch name', async () => {
   assert.equal(snapshot(dir), before);
 });
 
-test('board: a blocked move keeps the card in place and shows a message', async () => {
-  const dir = repo();
-  writeFileSync(join(dir, 'a.txt'), 'changed\n');
-  const board = new Board('git', dir);
-  await board.move('c1', 'inprogress');
-  const v = await board.view();
-  assert.equal(v.cards.find((c) => c.id === 'c1')?.column, 'todo');
-  assert.equal(v.notice?.kind, 'error');
-  assert.equal(v.currentBranch, 'main');
-});
-
-test('board: a move into In Progress switches branch; other moves do no Git work', async () => {
-  const dir = repo();
-  const board = new Board('git', dir);
-  await board.move('c2', 'review');
-  assert.equal(g(dir, 'branch', '--show-current').trim(), 'main');
-  await board.move('c1', 'inprogress');
-  const v = await board.view();
-  assert.equal(v.cards.find((c) => c.id === 'c1')?.column, 'inprogress');
-  assert.equal(v.currentBranch, 'kl/fix-login');
-});
-
-test('board: moving a card back into In Progress returns to its branch', async () => {
-  const dir = repo();
-  const board = new Board('git', dir);
-  await board.move('c1', 'inprogress');
-  await board.move('c1', 'review');
-  g(dir, 'switch', '-q', 'main');
-  await board.move('c1', 'inprogress');
-  const v = await board.view();
-  assert.equal(v.cards.find((c) => c.id === 'c1')?.column, 'inprogress');
-  assert.equal(v.currentBranch, 'kl/fix-login');
-  assert.equal(v.notice?.kind, 'ok');
-  assert.match(v.notice?.text ?? '', /existing branch kl\/fix-login/);
-});
-
 test('unsaved: only dirty files inside the repo are named', () => {
   const root = '/r/repo';
   const docs = [
@@ -245,42 +210,302 @@ test('unsaved: the message names files and caps the list', () => {
   assert.equal(unsavedMessage(many), 'Save or close these files first: 1, 2, 3, 4, 5 and 2 more. Nothing was changed.');
 });
 
+/** Workspace storage that keeps only JSON, as VS Code's Memento does, so a reload sees copies. */
+function memStore(): BoardDeps['store'] & { raw: Map<string, string> } {
+  const raw = new Map<string, string>();
+  return {
+    raw,
+    get: (k) => (raw.has(k) ? JSON.parse(raw.get(k) as string) : undefined),
+    update: async (k, v) => void raw.set(k, JSON.stringify(v)),
+  };
+}
+
+function load(dir: string | null, more: Partial<BoardDeps> = {}): Promise<Board> {
+  return Board.load({ gitPath: 'git', dir, store: memStore(), confirm: async () => true, ...more });
+}
+
+function colId(b: Board, name: string): string {
+  const c = b.data.columns.find((x) => x.name === name);
+  assert.ok(c, name);
+  return c.id;
+}
+
+async function addCard(b: Board, title: string, column = 'To Do'): Promise<Card> {
+  await b.handle({ type: 'addCard', columnId: colId(b, column), title, description: '' });
+  const card = b.data.cards.at(-1);
+  assert.ok(card && card.title === title.trim());
+  return card;
+}
+
+async function move(b: Board, card: Card, column: string): Promise<void> {
+  await b.handle({ type: 'move', cardId: card.id, columnId: colId(b, column) });
+}
+
+function columnOf(b: Board, card: Card): string | undefined {
+  return b.data.columns.find((c) => c.id === card.columnId)?.name;
+}
+
+test('board: a blocked move keeps the card in place, shows a message and assigns no branch', async () => {
+  const dir = repo();
+  writeFileSync(join(dir, 'a.txt'), 'changed\n');
+  const board = await load(dir);
+  const card = await addCard(board, 'Fix login');
+  await move(board, card, 'In Progress');
+  const v = await board.view();
+  assert.equal(columnOf(board, card), 'To Do');
+  assert.equal(card.branch, null);
+  assert.equal(v.notice?.kind, 'error');
+  assert.equal(v.currentBranch, 'main');
+});
+
+test('board: a move into In Progress switches branch; other moves do no Git work', async () => {
+  const dir = repo();
+  const board = await load(dir);
+  const card = await addCard(board, 'Fix login');
+  await move(board, card, 'Review');
+  assert.equal(g(dir, 'branch', '--show-current').trim(), 'main');
+  assert.equal(card.branch, null);
+  await move(board, card, 'In Progress');
+  assert.equal(columnOf(board, card), 'In Progress');
+  assert.equal(card.branch, 'kl/fix-login');
+  assert.equal((await board.view()).currentBranch, 'kl/fix-login');
+});
+
+test('board: moving a card back into In Progress returns to its branch', async () => {
+  const dir = repo();
+  const board = await load(dir);
+  const card = await addCard(board, 'Fix login');
+  await move(board, card, 'In Progress');
+  await move(board, card, 'Review');
+  g(dir, 'switch', '-q', 'main');
+  await move(board, card, 'In Progress');
+  const v = await board.view();
+  assert.equal(columnOf(board, card), 'In Progress');
+  assert.equal(v.currentBranch, 'kl/fix-login');
+  assert.match(v.notice?.text ?? '', /existing branch kl\/fix-login/);
+});
+
 test('board: unsaved files in the repo block the move before any Git action', async () => {
   const dir = repo();
   const before = snapshot(dir);
-  const board = new Board('git', dir, () => [
-    { fsPath: join(dir, 'a.txt'), isDirty: true },
-    { fsPath: '/elsewhere/x.ts', isDirty: true },
-  ]);
-  await board.move('c1', 'inprogress');
+  const board = await load(dir, {
+    openDocs: () => [
+      { fsPath: join(dir, 'a.txt'), isDirty: true },
+      { fsPath: '/elsewhere/x.ts', isDirty: true },
+    ],
+  });
+  const card = await addCard(board, 'Fix login');
+  await move(board, card, 'In Progress');
   const v = await board.view();
-  assert.equal(v.cards.find((c) => c.id === 'c1')?.column, 'todo');
-  assert.equal(v.notice?.kind, 'error');
+  assert.equal(columnOf(board, card), 'To Do');
   assert.equal(v.notice?.text, 'Save or close these files first: a.txt. Nothing was changed.');
   assert.equal(snapshot(dir), before);
 });
 
 test('board: unsaved files outside the repo do not block', async () => {
   const dir = repo();
-  const board = new Board('git', dir, () => [{ fsPath: '/elsewhere/x.ts', isDirty: true }]);
-  await board.move('c1', 'inprogress');
+  const board = await load(dir, { openDocs: () => [{ fsPath: '/elsewhere/x.ts', isDirty: true }] });
+  await move(board, await addCard(board, 'Fix login'), 'In Progress');
   assert.equal((await board.view()).currentBranch, 'kl/fix-login');
 });
 
+test('branch: a name another card owns gets -2, -3 and so on', async () => {
+  assert.equal(uniqueBranch('kl/a', new Set()), 'kl/a');
+  assert.equal(uniqueBranch('kl/a', new Set(['kl/a', 'kl/a-2'])), 'kl/a-3');
+  const dir = repo();
+  const board = await load(dir);
+  const first = await addCard(board, 'Fix login');
+  const other = await addCard(board, 'Fix login 2'); // Owns kl/fix-login-2 before the second "Fix login" starts.
+  const second = await addCard(board, 'Fix login!');
+  for (const c of [first, other, second]) {
+    await move(board, c, 'In Progress');
+    g(dir, 'switch', '-q', 'main');
+  }
+  assert.deepEqual([first.branch, other.branch, second.branch], ['kl/fix-login', 'kl/fix-login-2', 'kl/fix-login-3']);
+  assert.equal(g(dir, 'rev-parse', 'kl/fix-login-3'), g(dir, 'rev-parse', 'main'));
+  assert.equal(await board.branchFor(first), 'kl/fix-login'); // Its own branch is never counted as taken.
+});
+
+test('branch: a new card skips names that already exist as branches in the repo', async () => {
+  const dir = repo();
+  commitOn(dir, 'kl/fix-login', 'work.txt'); // Someone else's work, owned by no card.
+  const tip = g(dir, 'rev-parse', 'kl/fix-login');
+  g(dir, 'switch', '-q', 'main');
+  const board = await load(dir);
+  const card = await addCard(board, 'Fix login');
+  await move(board, card, 'In Progress');
+  assert.equal(card.branch, 'kl/fix-login-2');
+  assert.equal(g(dir, 'branch', '--show-current').trim(), 'kl/fix-login-2');
+  assert.equal(g(dir, 'rev-parse', 'kl/fix-login-2'), g(dir, 'rev-parse', 'main'));
+  assert.equal(g(dir, 'rev-parse', 'kl/fix-login'), tip);
+  assert.match(board.notice?.text ?? '', /Created and switched to kl\/fix-login-2/);
+});
+
+test('branch: a card with a stored branch keeps switching to it', async () => {
+  const dir = repo();
+  const board = await load(dir);
+  const card = await addCard(board, 'Fix login');
+  await move(board, card, 'In Progress');
+  await move(board, card, 'Review');
+  g(dir, 'switch', '-q', 'main');
+  await move(board, card, 'In Progress'); // kl/fix-login exists now, but it is this card's own branch.
+  assert.equal(card.branch, 'kl/fix-login');
+  assert.equal(g(dir, 'branch', '--show-current').trim(), 'kl/fix-login');
+  assert.match(board.notice?.text ?? '', /Switched to existing branch kl\/fix-login\./);
+  assert.equal(g(dir, 'for-each-ref', '--format=%(refname:short)', 'refs/heads/kl').trim(), 'kl/fix-login');
+});
+
+test('branch: renaming a card keeps the branch it was given', async () => {
+  const dir = repo();
+  const board = await load(dir);
+  const card = await addCard(board, 'Fix login');
+  await move(board, card, 'In Progress');
+  await board.handle({ type: 'editCard', cardId: card.id, title: 'Repair sign in', description: 'details' });
+  assert.equal(card.title, 'Repair sign in');
+  assert.equal(card.branch, 'kl/fix-login');
+  await move(board, card, 'Review');
+  g(dir, 'switch', '-q', 'main');
+  await move(board, card, 'In Progress');
+  assert.equal((await board.view()).currentBranch, 'kl/fix-login');
+  assert.equal(g(dir, 'for-each-ref', '--format=%(refname:short)', 'refs/heads/kl').trim(), 'kl/fix-login');
+});
+
+test('column action decides whether Git runs', async () => {
+  const dir = repo();
+  const board = await load(dir);
+  const ip = colId(board, 'In Progress');
+  await board.handle({ type: 'editColumn', columnId: ip, name: 'In Progress', action: 'none' });
+  const card = await addCard(board, 'Fix login');
+  await move(board, card, 'In Progress');
+  assert.equal(columnOf(board, card), 'In Progress');
+  assert.equal(g(dir, 'branch', '--show-current').trim(), 'main');
+  assert.equal(card.branch, null);
+  await board.handle({ type: 'addColumn', name: 'Doing', action: 'start' });
+  await move(board, card, 'Doing');
+  assert.equal(g(dir, 'branch', '--show-current').trim(), 'kl/fix-login');
+  const v = await board.view();
+  assert.equal(v.columns.find((c) => c.name === 'Doing')?.actionText, 'Moving a card here creates its branch from main and switches to it');
+  assert.equal(v.columns.find((c) => c.name === 'In Progress')?.actionText, 'No Git action');
+  assert.match(actionLine('start', null), /needs a main or master/);
+});
+
+test('columns: add, rename, reorder, and the delete rules', async () => {
+  const board = await load(null);
+  const names = (): string[] => board.data.columns.map((c) => c.name);
+  assert.deepEqual(names(), ['Backlog', 'To Do', 'In Progress', 'Review', 'Done']);
+  assert.deepEqual(board.data.columns.map((c) => c.action), ['none', 'none', 'start', 'none', 'none']);
+  await board.handle({ type: 'moveColumn', columnId: colId(board, 'Backlog'), delta: -1 }); // Already first.
+  await board.handle({ type: 'moveColumn', columnId: colId(board, 'Done'), delta: -1 });
+  await board.handle({ type: 'editColumn', columnId: colId(board, 'To Do'), name: ' Next ', action: 'none' });
+  assert.deepEqual(names(), ['Backlog', 'Next', 'In Progress', 'Done', 'Review']);
+  const card = await addCard(board, 'x', 'Review');
+  await board.handle({ type: 'deleteColumn', columnId: colId(board, 'Review') });
+  assert.ok(names().includes('Review'));
+  assert.match(board.notice?.text ?? '', /Move or delete the cards in "Review" first/);
+  await move(board, card, 'Done');
+  await board.handle({ type: 'deleteColumn', columnId: colId(board, 'Review') });
+  assert.equal(board.notice?.text, undefined);
+  assert.deepEqual(names(), ['Backlog', 'Next', 'In Progress', 'Done']);
+  await board.handle({ type: 'deleteCard', cardId: card.id });
+  for (const n of ['Backlog', 'Next', 'In Progress']) await board.handle({ type: 'deleteColumn', columnId: colId(board, n) });
+  await board.handle({ type: 'deleteColumn', columnId: colId(board, 'Done') });
+  assert.deepEqual(names(), ['Done']);
+  assert.match(board.notice?.text ?? '', /at least one column/);
+  for (let i = 0; i < 25; i++) await board.handle({ type: 'addColumn', name: `c${i}`, action: 'none' });
+  assert.equal(board.data.columns.length, 20);
+  assert.match(board.notice?.text ?? '', /at most 20 columns/);
+});
+
+test('cards: deleting a card keeps its branch, and the confirmation says so', async () => {
+  const dir = repo();
+  const asked: string[] = [];
+  let answer = false;
+  const board = await load(dir, { confirm: async (t) => (asked.push(t), answer) });
+  const card = await addCard(board, 'Fix login');
+  await move(board, card, 'In Progress');
+  await board.handle({ type: 'deleteCard', cardId: card.id });
+  assert.equal(board.data.cards.length, 1); // Cancelled.
+  answer = true;
+  await board.handle({ type: 'deleteCard', cardId: card.id });
+  assert.equal(board.data.cards.length, 0);
+  assert.equal(asked[1], 'Delete the card "Fix login"? Its Git branch kl/fix-login is kept; only the card is deleted.');
+  assert.equal(g(dir, 'branch', '--show-current').trim(), 'kl/fix-login');
+  assert.equal(g(dir, 'for-each-ref', '--format=%(refname:short)', 'refs/heads/kl/fix-login').trim(), 'kl/fix-login');
+});
+
+test('storage: the board survives a reload; first run seeds the default board', async () => {
+  const dir = repo();
+  const store = memStore();
+  const a = await Board.load({ gitPath: 'git', dir, store });
+  assert.equal(a.data.cards.length, 0);
+  assert.ok(store.raw.has(STORE_KEY));
+  const card = await addCard(a, 'Fix login');
+  await a.handle({ type: 'editCard', cardId: card.id, title: 'Fix login', description: 'Line one\nLine two' });
+  await move(a, card, 'In Progress');
+  await a.handle({ type: 'addColumn', name: 'Blocked', action: 'none' });
+  const b = await Board.load({ gitPath: 'git', dir, store });
+  assert.deepEqual(b.data, a.data);
+  assert.notEqual(b.data, a.data);
+  assert.equal(JSON.parse(store.raw.get(STORE_KEY) as string).version, 1);
+  const v = await b.view();
+  assert.equal(v.cards[0].branch, 'kl/fix-login');
+  assert.equal(v.cards[0].branch, v.currentBranch); // The page highlights this card as active.
+});
+
+test('storage: unreadable saved data is kept aside, never silently dropped', async () => {
+  const store = memStore();
+  const bad = { version: 1, columns: [], cards: [] };
+  await store.update(STORE_KEY, bad);
+  const board = await Board.load({ gitPath: 'git', dir: null, store });
+  assert.equal(board.data.columns.length, 5);
+  assert.deepEqual(store.get(UNREADABLE_KEY), bad);
+  assert.equal(board.notice?.kind, 'error');
+  const tampered = JSON.parse(JSON.stringify(board.data));
+  tampered.cards.push({ id: 'abc', title: 't', description: '', columnId: tampered.columns[0].id, branch: 'main' });
+  await store.update(STORE_KEY, tampered);
+  assert.equal((await Board.load({ gitPath: 'git', dir: null, store })).data.cards.length, 0); // A non-kl/ branch is refused.
+});
+
 test('messages from the webview are validated', () => {
-  assert.deepEqual(parseMessage({ type: 'ready' }), { type: 'ready' });
-  assert.deepEqual(parseMessage({ type: 'move', cardId: 'c1', column: 'done' }), { type: 'move', cardId: 'c1', column: 'done' });
+  const ok = [
+    { type: 'ready' },
+    { type: 'move', cardId: 'c1', columnId: 'done' },
+    { type: 'addCard', columnId: 'a1', title: 'x'.repeat(200), description: 'd'.repeat(20_000) },
+    { type: 'editCard', cardId: 'a1', title: 't', description: '' },
+    { type: 'deleteCard', cardId: 'a1' },
+    { type: 'addColumn', name: 'n'.repeat(50), action: 'start' },
+    { type: 'editColumn', columnId: 'a1', name: 'n', action: 'none' },
+    { type: 'moveColumn', columnId: 'a1', delta: -1 },
+    { type: 'deleteColumn', columnId: 'a1' },
+  ];
+  for (const m of ok) assert.deepEqual(parseMessage(m), m, JSON.stringify(m));
   for (const bad of [
     null,
     'move',
     [],
-    { type: 'move', cardId: 'c1', column: 'nowhere' },
-    { type: 'move', cardId: '../c1', column: 'done' },
-    { type: 'move', cardId: 'c1', column: 'done', title: 'x' },
-    { type: 'move', cardId: 1, column: 'done' },
+    { type: 'move', cardId: '../c1', columnId: 'done' },
+    { type: 'move', cardId: 'c1', columnId: 'done', title: 'x' },
+    { type: 'move', cardId: 1, columnId: 'done' },
+    { type: 'move', cardId: 'c1', column: 'done' },
     { type: 'ready', extra: true },
     { type: 'run', cmd: 'git reset --hard' },
+    { type: 'toString' },
+    { type: 'addCard', columnId: 'a1', title: 'x'.repeat(201), description: '' },
+    { type: 'addCard', columnId: 'a1', title: '   ', description: '' },
+    { type: 'addCard', columnId: 'a1', title: 't', description: 'd'.repeat(20_001) },
+    { type: 'addCard', columnId: 'a1', title: 't' },
+    { type: 'editCard', cardId: 'a1', title: 't', description: '', branch: 'kl/x' },
+    { type: 'addColumn', name: 'n'.repeat(51), action: 'none' },
+    { type: 'addColumn', name: 'n', action: 'merge' },
+    { type: 'moveColumn', columnId: 'a1', delta: 2 },
   ]) {
     assert.equal(parseMessage(bad), null, JSON.stringify(bad));
   }
+});
+
+test('cards: at most 500', async () => {
+  const board = await load(null);
+  for (let i = 0; i < 501; i++) await board.handle({ type: 'addCard', columnId: colId(board, 'Backlog'), title: `t${i}`, description: '' });
+  assert.equal(board.data.cards.length, 500);
+  assert.match(board.notice?.text ?? '', /at most 500 cards/);
 });

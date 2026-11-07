@@ -33,7 +33,16 @@ async function openBoard(context: vscode.ExtensionContext): Promise<void> {
   }
   const api = await gitApi();
   // Use the same git binary as VS Code's Git extension; fall back to `git` on PATH.
-  const board = new Board(api?.git.path ?? 'git', vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? null, openDocs);
+  const board = await Board.load({
+    gitPath: api?.git.path ?? 'git',
+    dir: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? null,
+    store: context.workspaceState, // Per workspace, outside the repo; never written to the working tree.
+    openDocs,
+    confirm,
+  });
+  // The command may have run again while the board loaded; TypeScript cannot see that across the await.
+  const opened = panel as vscode.WebviewPanel | undefined;
+  if (opened) return opened.reveal();
   const media = vscode.Uri.joinPath(context.extensionUri, 'media');
   const p = vscode.window.createWebviewPanel('kanbanlight.board', 'KanbanLight', vscode.ViewColumn.One, {
     enableScripts: true,
@@ -47,8 +56,7 @@ async function openBoard(context: vscode.ExtensionContext): Promise<void> {
   const subs: vscode.Disposable[] = [
     p.webview.onDidReceiveMessage(async (raw: unknown) => {
       const msg = parseMessage(raw);
-      if (!msg) return; // Drop anything that is not a well-formed message.
-      if (msg.type === 'move') await board.move(msg.cardId, msg.column);
+      if (msg) await board.handle(msg); // Anything not well formed is dropped; the page still gets the state back.
       await post();
     }),
     p.onDidChangeViewState(() => void post()),
@@ -60,6 +68,11 @@ async function openBoard(context: vscode.ExtensionContext): Promise<void> {
     subs.forEach((s) => s.dispose());
     panel = undefined;
   });
+}
+
+/** A modal the user answers with Delete or Cancel (Esc). */
+async function confirm(text: string): Promise<boolean> {
+  return (await vscode.window.showWarningMessage(text, { modal: true }, 'Delete')) === 'Delete';
 }
 
 /** Every open text and notebook document. Board filters to unsaved files inside the repo. */
@@ -89,9 +102,10 @@ function html(webview: vscode.Webview, media: vscode.Uri): string {
 <title>KanbanLight</title>
 </head>
 <body>
-<header><h1>KanbanLight</h1><span id="branch"></span></header>
+<header><h1>KanbanLight</h1><span id="branch"></span><button id="add-column" type="button">Add column</button></header>
 <div id="notice" role="status" hidden></div>
 <main id="board"></main>
+<dialog id="dialog"></dialog>
 <script nonce="${nonce}" src="${js}"></script>
 </body>
 </html>`;

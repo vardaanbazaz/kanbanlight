@@ -5,9 +5,21 @@ h1 { font-size: 1.3em; margin: 0 0 8px; }
 #notice { padding: 6px 10px; margin: 8px 0; border-radius: 4px; }
 #notice.error { background: var(--vscode-inputValidation-errorBackground); border: 1px solid var(--vscode-inputValidation-errorBorder); }
 #notice.ok { background: var(--vscode-inputValidation-infoBackground); border: 1px solid var(--vscode-inputValidation-infoBorder); }
-#board { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 10px; }
+#board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(180px, 1fr); gap: 10px; overflow-x: auto; }
 .column { background: var(--vscode-sideBar-background); border-radius: 6px; padding: 8px; min-height: 240px; }
-.column h2 { font-size: 0.95em; margin: 0 0 8px; }
-.card { background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-widget-border, transparent); border-radius: 4px; padding: 8px; margin-bottom: 8px; cursor: grab; }
-.card .branch { display: block; margin-top: 4px; font-size: 0.85em; opacity: 0.8; overflow-wrap: anywhere; }
+.column-head { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; flex-wrap: wrap; }
+.column h2 { font-size: 0.95em; margin: 0; overflow-wrap: anywhere; }
+.column .action { font-size: 0.85em; opacity: 0.8; margin: 4px 0 8px; }
+.tools button { padding: 0 4px; font-size: 0.8em; }
+button { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; border-radius: 3px; padding: 3px 8px; cursor: pointer; }
+.card { background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-widget-border, transparent); border-radius: 4px; padding: 8px; margin-bottom: 8px; cursor: pointer; overflow-wrap: anywhere; }
+.card.active { border: 2px solid var(--vscode-focusBorder); }
+.card .branch { display: block; margin-top: 4px; font-size: 0.85em; opacity: 0.8; }
+.card .here { font-size: 0.8em; margin-top: 4px; color: var(--vscode-focusBorder); }
 body.busy .card { cursor: progress; opacity: 0.6; }
+dialog { background: var(--vscode-editorWidget-background); color: var(--vscode-foreground); border: 1px solid var(--vscode-widget-border, transparent); min-width: 360px; }
+dialog h3 { margin-top: 0; }
+dialog label { display: block; margin-bottom: 8px; }
+dialog input, dialog textarea, dialog select { display: block; width: 100%; box-sizing: border-box; margin-top: 2px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border, transparent); }
+dialog textarea { min-height: 120px; }
+dialog .buttons { display: flex; gap: 8px; justify-content: flex-end; }
